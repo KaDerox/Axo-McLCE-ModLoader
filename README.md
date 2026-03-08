@@ -30,6 +30,7 @@ If you want to make mods you can read [our docs](https://axoloader.eu/docs) abou
 
 **WIP AxoAPI features:**
 - [ ] More blocks and item flags
+- [ ] Custom recipies
 - [ ] Custom entities
 - [ ] Custom blocks generation in world
 
