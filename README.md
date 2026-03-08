@@ -10,9 +10,9 @@ Axo Minecraft Legacy Console Edition ModLoader is an ModLoader for leaked Minecr
 
 ## Features
 
-- Suport for:
+- Support for:
     - **[McLCE Version by smartcmd](https://github.com/smartcmd/MinecraftConsoles)**
-    - More comming soon
+    - More coming soon
 - Make mods using .dll files
 - In installer autocompiler
 - AxoAPI in full development (Will allow for easier mod making using predefined API)
