@@ -27,7 +27,7 @@ As the project is mainly written in C++, any help with improving the code qualit
 
 If you find a bug or unexpected behavior, please open an issue or report it on discord and include:
 - a clear description of the problem
-- steps to reproduce it
+- if you have clues you can give steps to reproduce it
 - any relevant logs or screenshots
 
 ## Thank You
