@@ -8,10 +8,9 @@ As the project is mainly written in C++, any help with improving the code qualit
 
 ## How to Contribute
 
-1. Fork the repository.
-2. Create a new branch for your changes.
-3. Make your improvements or fixes.
-4. Submit a pull request with a clear description of what you changed and why.
+1. Get the modloader cpp and h files.
+2. Make your improvements or fixes.
+3. Submit a pull request with a clear description of what you changed and why.
 
 ## Additional Technical Info
 1. Loader currently uses 6 custom files:
