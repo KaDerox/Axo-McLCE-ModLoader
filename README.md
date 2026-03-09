@@ -2,7 +2,7 @@
 # Axo McLCE ModLoader
 [![Discord](https://img.shields.io/badge/Discord-Join%20Server-5865F2?logo=discord&logoColor=white)](https://discord.gg/Rm5fscpnT4)
 
-Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for leaked Minecraft Console Edition that adds mods compatibility!
+Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for the leaked Minecraft Console Edition that adds mod compatibility!
 
 
 ![Logo](http://axoloader.eu/api/assets/Logo_Baner.png) 
@@ -14,7 +14,7 @@ Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for leaked Minecra
     - **[McLCE Version by smartcmd](https://github.com/smartcmd/MinecraftConsoles)**
     - More coming soon
 - Make mods using .dll files
-- In installer autocompiler
+- Built-in autocompiler in the installer
 - AxoAPI in full development (Will allow for easier mod making using predefined API)
 - You don't need to download a new installer every time there is an update. The installer uses our API to download newest ModLoader builds!
 
