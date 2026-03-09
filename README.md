@@ -16,10 +16,10 @@ Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for leaked Minecra
 - Make mods using .dll files
 - In installer autocompiler
 - AxoAPI in full development (Will allow for easier mod making using predefined API)
-- You don't need to download a new installer every time there is an update. The installer usesour API to download newest ModLoader builds!
+- You don't need to download a new installer every time there is an update. The installer uses our API to download newest ModLoader builds!
 
-## Downloads
-You can get our ModLoader **[here]()** or on our **[website](https://axoloader.eu)**!
+## Installation
+You can get our ModLoader **[here]()** or on our **[website](https://axoloader.eu)**! Then lunch downloaded exe file and complete setup!
 
 ## AxoAPI
 If you want to make mods you can read [our docs](https://axoloader.eu/docs) about mod creating using AxoAPI!
@@ -40,6 +40,9 @@ If you want to make mods you can read [our docs](https://axoloader.eu/docs) abou
 - [ ] Custom World Gen
 - [ ] Custom armors
 - [ ] And many more!
+
+## More about
+I started working on it bit later than everyone so I'm a little in back but I believe I can catch up to other mod loaders and give player good experience!
 
 ## Authors
 
