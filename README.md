@@ -19,10 +19,10 @@ Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for the leaked Min
 - You don't need to download a new installer every time there is an update. The installer uses our API to download newest ModLoader builds!
 
 ## Installation
-You can get our ModLoader **[here]()** or on our **[website](https://axoloader.eu)**! Then lunch downloaded exe file and complete setup!
+You can get our ModLoader **[here]()** or on our **[website](https://axoloader.eu)**! Then launch downloaded exe file and complete setup!
 
 ## AxoAPI
-If you want to make mods you can read [our docs](https://axoloader.eu/docs) about mod creating using AxoAPI!
+If you want to make mods for AxoLoader you can read [our docs](https://axoloader.eu/docs) about mod creating using AxoAPI!
 
 **Current AxoAPI features:**
 - [ ] Custom blocks
@@ -30,9 +30,9 @@ If you want to make mods you can read [our docs](https://axoloader.eu/docs) abou
 
 **WIP AxoAPI features:**
 - [ ] More blocks and item flags
-- [ ] Custom recipies
+- [ ] Custom recipes
 - [ ] Custom entities
-- [ ] Custom blocks generation in world
+- [ ] Custom block generation in the world
 - [ ] Custom blocks models
 
 **AxoAPI features that are in plans:**
@@ -42,7 +42,7 @@ If you want to make mods you can read [our docs](https://axoloader.eu/docs) abou
 - [ ] And many more!
 
 ## More about
-I started working on it bit later than everyone so I'm a little in back but I believe I can catch up to other mod loaders and give player good experience!
+I started working on it a bit later than everyone else so I'm a little behind but I believe I can catch up to other mod loaders and give players good experience!
 
 ## Authors
 
