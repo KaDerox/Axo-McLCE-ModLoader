@@ -33,6 +33,7 @@ If you want to make mods you can read [our docs](https://axoloader.eu/docs) abou
 - [ ] Custom recipies
 - [ ] Custom entities
 - [ ] Custom blocks generation in world
+- [ ] Custom blocks models
 
 **AxoAPI features that are in plans:**
 - [ ] Custom dimensions
