@@ -117,10 +117,11 @@ else
 Done! Pretty simple aswell!
 
 ### Logging in Axo
-To log in axo you need to use:
+To log in Axo all you need to use is:
 ```
 AxoAPI_Log("Example Log");
 ```
+And done! Now it logs in debug console!
 
 ## FAQ
 - Q: Was AI used to create Axo?
