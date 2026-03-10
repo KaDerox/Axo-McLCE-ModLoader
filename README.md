@@ -21,6 +21,7 @@ Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for the leaked Min
 ## Installation
 You will need Visual Studio 2022 for autocompiler. Then clone repository of one of supported version of McLCE and in Visual Studio set Minecraft.Client as a startup project. 
 After that get our ModLoader **[here](https://github.com/KaDerox/Axo-McLCE-ModLoader/releases)**! Then launch downloaded exe file and complete setup and you're done!
+NOTE: Compilation part of installer opens cmd
 
 ## AxoAPI
 If you want to create mods for AxoLoader you can read under this section about mod creating using AxoAPI!
@@ -52,6 +53,7 @@ Every Axo mod needs 3 files:
     - textures
         - items (only if you add items)
         - terrain (only if you add blocks)
+
 ### Creating mod.dll
 1. Create blank DLL project. Open the created project and delete generated .cpp files Download AxoAPI.h from **[here](https://github.com/KaDerox/Axo-McLCE-ModLoader/releases)** and place it in the source files
 2. Create YourModName.cpp in the source files. This is the main code for your mod:
@@ -82,8 +84,7 @@ Registering new blocks in Axo is simple! All registrations go in the ```void Mod
 Here is an example of adding a block:
 ```
 AxoBlockDef exampleBlock;
-exampleBlock.id = 174; // Will be replaced in comming days to auto giving id, free id: 174–255
-exampleBlock.dropItemId = 0; // 0 = drop itself other are item drops
+exampleBlock.dropItemName = "Example Item"; // "" = drop itself 
 exampleBlock.dropCount = 1;
 exampleBlock.iconName = L"example_block"; // From textures/terrain
 exampleBlock.name = "Example Block";
@@ -103,7 +104,6 @@ Registering new items in Axo is also very simple All registrations also go in th
 Here is an example of adding an item:
 ```
 AxoItemDef exampleItem;
-exampleItem.id = 500; // This will also be removed in a few days, free id: 422–4095
 exampleItem.iconName = L"example_item"; // From textures/items
 exampleItem.name = "Example Item";
 exampleItem.maxStackSize = 16; // Stack Size
