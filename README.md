@@ -124,6 +124,8 @@ To log in axo you need to use:
 ## FAQ
 - Q: Was AI used to create Axo?
 - A: Yes, it was used for bug fixes, code optimization and to speed up its development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader.
+- Q: My compilation takes a long time. Is that normal?
+- A: Yes, it's compiling the whole project so it can take a while. From my tests, it takes 2 to 5 minutes. And if it takes a very long time you can cancel compilation in installer and compile it in Visual Studio 2022.
 
 ## More about
 I started working on it a bit later than everyone else so I'm a little behind but I believe I can catch up to other mod loaders and give players good experience! Also I know that this code could be better but I'm not the greatest at c++ and that's why there is **[CONTRIBUTING.md](https://github.com/KaDerox/Axo-McLCE-ModLoader?tab=contributing-ov-file)**!
