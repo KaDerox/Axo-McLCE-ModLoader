@@ -15,15 +15,15 @@ Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for the leaked Min
     - More coming soon
 - Make mods using .dll files
 - Built-in autocompiler in the installer
-- AxoAPI in full development (Will allow for easier mod making using predefined API)
+- AxoAPI in full development
 - You don't need to download a new installer every time there is an update. You will need to download new installer only when there are major changes. The installer uses our API to download the newest ModLoader builds!
 
 ## Installation
 You will need Visual Studio 2022 for autocompiler. Then clone repository of one of supported version of McLCE and in Visual Studio set Minecraft.Client as a startup project. 
-After that get our ModLoader **[here]()** or on our **[website](https://axoloader.eu)**! Then launch downloaded exe file and complete setup and you're done!
+After that get our ModLoader **[here]()**! Then launch downloaded exe file and complete setup and you're done!
 
 ## AxoAPI
-If you want to create mods for AxoLoader you can read [our docs](https://axoloader.eu/docs) about mod creating using AxoAPI!
+If you want to create mods for AxoLoader you can read under this section about mod creating using AxoAPI!
 
 **Current AxoAPI features:**
 - [x] Custom blocks with custom drop
@@ -41,6 +41,39 @@ If you want to create mods for AxoLoader you can read [our docs](https://axoload
 - [ ] Custom World Gen
 - [ ] Custom armor
 - [ ] And many more!
+
+## Making Mods
+Here I will provide you with samples of using AxoAPI!
+
+### Mod setup
+Every mod for Axo needs 3 files:
+    - mod.dll
+    - manifest.json (currently used as a base for later development)
+    - textures
+        - items (only if you add items)
+        - terrain (only if you add blocks)
+### Creating mod.dll
+1. Create blank DLL project. Open created project and delete genereted .cpp files. Download AxoAPI.h from [here](a) and put it into source files.
+2. Create YourModName.cpp in source files. This is main code for your mod:
+   ```#define AXO_MOD 
+#define MOD_ID "test_mod"
+#include "AxoAPI.h"
+
+extern "C" __declspec(dllexport)
+void ModEntry(AxoMod* /*mod*/, AxoAPITable* api) {
+    AxoMod_SetAPI(api); 
+
+}
+
+extern "C" __declspec(dllexport)
+void OnTick() {
+}
+
+extern "C" __declspec(dllexport)
+void OnShutdown() {
+
+}```
+
 
 ## More about
 I started working on it a bit later than everyone else so I'm a little behind but I believe I can catch up to other mod loaders and give players good experience!
