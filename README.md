@@ -115,6 +115,11 @@ else
     AxoAPI_Log("Example Item ERROR.");
 ```
 Done! Pretty simple aswell!
+```
+AxoAPI_Log("Example Log");
+```
+### Logging in Axo
+To log in axo you need to use:
 
 ## FAQ
 - Q: Was AI used to create Axo?
