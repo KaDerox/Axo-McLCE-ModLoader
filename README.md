@@ -118,7 +118,7 @@ Done! Pretty simple aswell!
 
 ## FAQ
 - Q: Was AI used to create Axo?
-- A: Yes, it was used for bug fixes, code optimization and to speed up its development of it. If you're not happy about it, just don't use Axo Loader.
+- A: Yes, it was used for bug fixes, code optimization and to speed up its development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader.
 
 ## More about
 I started working on it a bit later than everyone else so I'm a little behind but I believe I can catch up to other mod loaders and give players good experience! Also I know that this code could be better but I'm not the greatest at c++ and that's why there is **[CONTRIBUTING.md](https://github.com/KaDerox/Axo-McLCE-ModLoader?tab=contributing-ov-file)**!
