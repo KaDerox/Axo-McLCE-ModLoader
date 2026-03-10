@@ -55,24 +55,25 @@ Every mod for Axo needs 3 files:
 ### Creating mod.dll
 1. Create blank DLL project. Open created project and delete genereted .cpp files. Download AxoAPI.h from [here](a) and put it into source files.
 2. Create YourModName.cpp in source files. This is main code for your mod:
-   ```#define AXO_MOD 
-#define MOD_ID "test_mod"
-#include "AxoAPI.h"
+   ```
+    #define AXO_MOD 
+    #define MOD_ID "test_mod"
+    #include "AxoAPI.h"
 
-extern "C" __declspec(dllexport)
-void ModEntry(AxoMod* /*mod*/, AxoAPITable* api) {
-    AxoMod_SetAPI(api); 
+    extern "C" __declspec(dllexport)
+    void ModEntry(AxoMod* /*mod*/, AxoAPITable* api) {
+        AxoMod_SetAPI(api); 
 
-}
+    }
 
-extern "C" __declspec(dllexport)
-void OnTick() {
-}
+    extern "C" __declspec(dllexport)
+    void OnTick() {
+    }
 
-extern "C" __declspec(dllexport)
-void OnShutdown() {
-
-}
+    extern "C" __declspec(dllexport)
+    void OnShutdown() {
+    
+    }
     ```
 
 
