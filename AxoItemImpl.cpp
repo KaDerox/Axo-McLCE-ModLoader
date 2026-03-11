@@ -90,6 +90,18 @@ public:
             return mMiningSpeed;
         return 1.0f;
     }
+
+    bool canDestroySpecial(Tile* tile) override {
+        if (tile == nullptr) return false;
+        Material* mat = tile->material;
+        if (mIsPickaxe && (mat == Material::stone || mat == Material::metal || mat == Material::heavyMetal))
+            return true;
+        if (mIsAxe && mat == Material::wood)
+            return true;
+        if (mIsShovel && (mat == Material::dirt || mat == Material::sand))
+            return true;
+        return false;
+    }
 };
 
 class AxoFoodItem : public FoodItem {
@@ -157,6 +169,18 @@ public:
         if (!mIsPickaxe && !mIsAxe && !mIsShovel && mMiningSpeed != 1.0f)
             return mMiningSpeed;
         return 1.0f;
+    }
+
+    bool canDestroySpecial(Tile* tile) override {
+        if (tile == nullptr) return false;
+        Material* mat = tile->material;
+        if (mIsPickaxe && (mat == Material::stone || mat == Material::metal || mat == Material::heavyMetal))
+            return true;
+        if (mIsAxe && mat == Material::wood)
+            return true;
+        if (mIsShovel && (mat == Material::dirt || mat == Material::sand))
+            return true;
+        return false;
     }
 };
 
