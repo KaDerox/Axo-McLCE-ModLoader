@@ -61,7 +61,7 @@ Every Axo mod needs 3 files:
 2. Create YourModName.cpp in the source files. This is the main code for your mod:
    ```
     #define AXO_MOD 
-    #define MOD_ID "test_mod"
+    #define MOD_ID "your_mod"
     #include "AxoAPI.h"
 
     extern "C" __declspec(dllexport)
