@@ -57,7 +57,7 @@ Every Axo mod needs 3 files:
   - terrain (only if you add blocks)
 
 ### Creating mod.dll
-1. Create blank project in VS 2022. Configure the project for the dll export. Open the created project and delete all auto generated files. Download AxoAPI.h from **[here](https://github.com/KaDerox/Axo-McLCE-ModLoader/releases)** and place it in the source files
+1. Create blank c++ project in VS 2022. Configure the project for the dll export. Download AxoAPI.h from **[here](https://github.com/KaDerox/Axo-McLCE-ModLoader/releases)** and place it in the source files
 2. Create YourModName.cpp in the source files. This is the main code for your mod:
    ```
     #define AXO_MOD 
@@ -101,8 +101,8 @@ else
 ```
 And that's all you need to register a block! Pretty simple!
 
-### Custom food in Axo
-To create food in Axo, you use the same method as for items, but you add food flags.
+### Custom item in Axo
+Creating items in Axo is really simple!
 Here is an example of adding an item:
 ```
 AxoItemDef exampleItem;
