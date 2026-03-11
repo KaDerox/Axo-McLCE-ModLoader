@@ -29,10 +29,11 @@ If you want to create mods for AxoLoader you can read under this section about m
 
 **Current AxoAPI features:**
 - [x] Custom blocks with custom drop
-- [x] Custom items 
+- [x] Custom items
+- [x] Food items
+- [x] Custom swords, pickaxes, axes and shovels
 
 **WIP AxoAPI features:**
-- [ ] More blocks and item flags
 - [ ] Custom recipes
 - [ ] Custom entities
 - [ ] Custom block generation in the world
@@ -100,8 +101,8 @@ else
 ```
 And that's all you need to register a block! Pretty simple!
 
-### Adding new items
-Registering new items in Axo is also very simple! All registrations also go in the ```void ModEntry``` function.
+### Custom food in Axo
+To create food in Axo, you use the same method as for items, but you add food flags.
 Here is an example of adding an item:
 ```
 AxoItemDef exampleItem;
@@ -115,6 +116,55 @@ else
     AxoAPI_Log("Example Item ERROR.");
 ```
 Done! Pretty simple aswell!
+
+### Custom food in Axo
+To create food in Axo you use the same method that is used for items but you add food flags!
+```
+AxoItemDef exampleFood;
+exampleFood.iconName = L"example_food";
+exampleFood.name = "Example Food";
+exampleFood.maxStackSize = 16;
+exampleFood.isEdible = true; // Declares if it is Edible
+exampleFood.food.nutrition = 6; // Food nutrition 
+exampleFood.food.saturation = AXO_SATURATION_GOOD; // Food saturation (you can find refrences in AxoAPI.h)
+exampleFood.food.isMeat = true; // Declares if wolfs can eat it
+exampleFood.food.canAlwaysEat = true; // Declares if you can eat it even with full hunger bar
+
+if (AxoAPI_RegisterItem(&exampleFood))
+    AxoAPI_Log("Example Food DONE.");
+else
+    AxoAPI_Log("Example Food ERROR.");
+```
+Done!
+
+### Custom swords in Axo
+To create sword in Axo you use the same method that is used for items but you add sword flags!
+```
+AxoItemDef exampleSword;
+exampleSword.iconName = L"example_sword";
+exampleSword.name = "Example Sword";
+exampleSword.attackDamage = 99; // Attack damage base: 1
+
+if (AxoAPI_RegisterItem(&exampleSword))
+    AxoAPI_Log("Example Sword DONE.");
+else
+    AxoAPI_Log("Example Sword ERROR.");
+```
+And done!
+
+### Custom pickaxes, axes and shovels in Axo
+```
+AxoItemDef examplePickaxe;
+examplePickaxe.iconName = L"example_pickaxe";
+examplePickaxe.name = "Example Pickaxe";
+examplePickaxe.isPickaxe = true; // Available options are isPickaxe, isAxe, isShovel
+examplePickaxe.miningSpeed = 9.0f; // Mining speed, base: 1.0f
+
+if (AxoAPI_RegisterItem(&exampleSword))
+    AxoAPI_Log("Example Pickaxe DONE.");
+else
+    AxoAPI_Log("Example Pickaxe ERROR.");
+```
 
 ### Logging in Axo
 To log in Axo all you need to use is:
