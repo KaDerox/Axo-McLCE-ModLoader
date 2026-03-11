@@ -123,6 +123,12 @@ AxoAPI_Log("Example Log");
 ```
 And done! Now it logs in debug console!
 
+### Adding textures
+In the folder with manifest.json and mod.dll you should have textures folder and there terrain and items. In terrain you put block textures and in items you put item textures.
+
+### Exporting done mod
+It is pretty simple! Just compress manifest.json, mod.dll and textures folder into zip file and done! You can put it into mods folder and it should work!
+
 ## FAQ
 - Q: Was AI used to create Axo?
 - A: Yes, it was used for bug fixes, code optimization and to speed up its development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader.
