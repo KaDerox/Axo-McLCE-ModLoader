@@ -7,14 +7,14 @@
 
 enum AxoCreativeTab {
     AxoTab_BuildingBlocks = 0,
-    AxoTab_Decoration = 1,
-    AxoTab_Redstone = 2,
-    AxoTab_Transport = 3,
-    AxoTab_Materials = 4,
-    AxoTab_Food = 5,
-    AxoTab_ToolsArmor = 6,
-    AxoTab_Brewing = 7,
-    AxoTab_Misc = 12,
+    AxoTab_Decoration     = 1,
+    AxoTab_Redstone       = 2,
+    AxoTab_Transport      = 3,
+    AxoTab_Materials      = 4,
+    AxoTab_Food           = 5,
+    AxoTab_ToolsArmor     = 6,
+    AxoTab_Brewing        = 7,
+    AxoTab_Misc           = 12,
 };
 
 #define AXO_SATURATION_POOR          0.1f
@@ -25,50 +25,50 @@ enum AxoCreativeTab {
 #define AXO_SATURATION_SUPERNATURAL  1.2f
 
 struct AxoFoodDef {
-    int   nutrition = 4;
-    float saturation = AXO_SATURATION_NORMAL;
-    bool  isMeat = false;
+    int   nutrition    = 4;
+    float saturation   = AXO_SATURATION_NORMAL;
+    bool  isMeat       = false;
     bool  canAlwaysEat = false;
 };
 
 struct AxoItemDef {
-    int              id = AXO_ID_AUTO;
+    int              id           = AXO_ID_AUTO;
     std::wstring     iconName;
     std::string      name;
     int              maxStackSize = 64;
-    int              creativeTab = AxoTab_Misc;
-    std::function<void()> onUse = nullptr;
+    int              creativeTab  = AxoTab_Misc;
+    std::function<void()> onUse   = nullptr;
     std::function<void()> onUseOn = nullptr;
 
     int              attackDamage = 1;
 
-    float            miningSpeed = 1.0f;
-    bool             isPickaxe = false;
-    bool             isAxe = false;
-    bool             isShovel = false;
+    float            miningSpeed  = 1.0f;
+    bool             isPickaxe    = false;
+    bool             isAxe        = false;
+    bool             isShovel     = false;
 
-    bool             isEdible = false;
+    bool             isEdible     = false;
     AxoFoodDef       food;
 };
 
 enum AxoMaterial {
     AxoMat_Stone = 0,
-    AxoMat_Wood = 1,
+    AxoMat_Wood  = 1,
     AxoMat_Grass = 2,
-    AxoMat_Dirt = 3,
+    AxoMat_Dirt  = 3,
     AxoMat_Metal = 4,
 };
 
 struct AxoBlockDef {
-    int          id = AXO_ID_AUTO;
+    int          id           = AXO_ID_AUTO;
     std::wstring iconName;
     std::string  name;
-    AxoMaterial  material = AxoMat_Stone;
-    float        hardness = 1.5f;
-    float        resistance = 10.0f;
-    int          creativeTab = 0;
+    AxoMaterial  material     = AxoMat_Stone;
+    float        hardness     = 1.5f;
+    float        resistance   = 10.0f;
+    int          creativeTab  = 0;
     std::string  dropItemName = AXO_DROP_SELF;
-    int          dropCount = 1;
+    int          dropCount    = 1;
 };
 
 struct AxoBlockDefInternal {
