@@ -185,7 +185,7 @@ It is pretty simple! Just compress manifest.json, mod.dll, and the textures fold
 
 ## FAQ
 - **Q:** Was AI used to create Axo?
-- **A:** Yes, it was used for bug fixes,some code optimization and to speed up it's development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader. **NOTE: By saying "to speed it's development" I mean analizying functions made by 4J so it takes less time**
+- **A:** Yes, it was used for bug fixes,some code optimization and to speed up it's development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader. **NOTE: By saying "to speed it's development" I mean analizying functions made by 4J so it takes less time for reading thousands lines od code**
 - **Q:** My compilation takes a long time. Is that normal?
 - **A:** Yes, it's compiling the whole project so it can take a while. From my tests, it takes 2 to 5 minutes. And if it takes a very long time you can cancel compilation in installer and compile it in Visual Studio 2022.
 - **Q:** Is Axo malware?
