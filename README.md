@@ -84,7 +84,18 @@ Every Axo mod needs 3 files:
        // Method called on shutdown
     }
     ```
-   
+
+### Manifest.json
+Here is an example of how manifest should look like.
+```
+{
+    "mod_id": "example_mod",
+    "name": "Example Mod",
+    "version": "1.0.0",
+    "author": "you",
+    "description": "Simple example mod for AxoLoader"
+}
+```
 ### Adding new blocks
 Registering new blocks in Axo is simple! All registrations go in the ```void ModEntry``` function.
 Here is an example of adding a block:
