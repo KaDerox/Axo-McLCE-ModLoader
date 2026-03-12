@@ -184,8 +184,10 @@ In the folder with manifest.json and mod.dll, you should have a textures folder 
 It is pretty simple! Just compress manifest.json, mod.dll, and the textures folder into a zip file and you're done! You can put it into the mods folder and it should work.
 
 ## FAQ
-- **Q:** Was AI used to create Axo?
-- **A:** Yes, it was used for bug fixes,some code optimization and to speed up it's development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader. **NOTE: By saying "to speed it's development" I mean analizying functions made by 4J so it takes less time for reading thousands lines od code**
+- **Q**: Was AI used to create Axo?
+- **A:** Yes. It was used to help find solutions to bugs, suggest some code optimizations, and speed up development. Every line of code is understandable to humans. If you're not happy about it, you don't have to use Axo Loader.
+
+NOTE: By saying "to speed up development", I mean analyzing functions made by 4J so it takes less time to read thousands of lines of code.
 - **Q:** My compilation takes a long time. Is that normal?
 - **A:** Yes, it's compiling the whole project so it can take a while. From my tests, it takes 2 to 5 minutes. And if it takes a very long time you can cancel compilation in installer and compile it in Visual Studio 2022.
 - **Q:** Is Axo malware?
