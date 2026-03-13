@@ -14,3 +14,8 @@ AxoAPITable* AxoAPI_GetTable();
 void         AxoAPI_FlushRegistrations();
 void         AxoAPI_FlushBlockRegistrations();
 void         AxoAPI_FlushCreativeMenu();
+
+struct AxoRecipeDef;
+bool AxoRecipe_CreateFromDef(const AxoRecipeDef& def);
+void AxoAPI_FlushRecipeRegistrations();
+int  AxoAPI_ResolveItemName(const std::string& name);
