@@ -2,6 +2,7 @@
 
 #include "AxoModLoader.h"
 #include "AxoAPI.h"
+#include "..\..\Minecraft.World\Recipes.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -234,6 +235,8 @@ void AxoModLoader_MidInit() {
 void AxoModLoader_Init(const char*) {
     printf("[AxoLoader] Init...\n");
     AxoAPI_FlushCreativeMenu();
+    AxoAPI_FlushRecipeRegistrations();
+    Recipes::getInstance()->buildRecipeIngredientsArray();
     printf("[AxoLoader] Init done. %u mod(s) active.\n", (unsigned)sLoadedMods.size());
 }
 
@@ -284,7 +287,7 @@ static const AtlasSlot kFreeTerrainSlots[] = {
     {30,0},{30,1},{30,2},{30,3},{30,4},{30,5},{30,6},{30,7},{30,8},{30,9},{30,10},{30,11},{30,12},{30,13},{30,14},{30,15},
     {31,0},{31,1},{31,2},{31,3},{31,4},{31,5},{31,6},{31,7},{31,8},{31,9},{31,10},{31,11},{31,12},{31,13},{31,14},{31,15},
 };
-static const int kFreeTerrainSlotsCount = (int)(sizeof(kFreeTerrainSlots)/sizeof(kFreeTerrainSlots[0])); // 192 slots
+static const int kFreeTerrainSlotsCount = (int)(sizeof(kFreeTerrainSlots)/sizeof(kFreeTerrainSlots[0]));
 static int sNextFreeTerrainSlot = 0;
 
 static bool AllocTerrainSlot(int& row, int& col) {
