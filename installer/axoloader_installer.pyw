@@ -15,6 +15,7 @@ from unittest import result
 import json
 import urllib.request
 import sys
+import winreg
 
 def resource_path(relative_path):
     try:
@@ -29,6 +30,39 @@ username = getpass.getuser()
 
 # Global variable to cache the changelog content
 _changelog_cache = None
+
+advanced_settings = {
+    "msbuild_path": r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+    "vs_version": "VS 2022"
+}
+
+# Find msbuild instead of hardcoding it 
+def find_msbuild():
+    for drive in "CDEFGHIJKLMNOPQRSTUVWXYZ":
+        vswhere = rf"{drive}:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+        if os.path.exists(vswhere):
+            result = subprocess.run(
+                [vswhere, "-latest", "-requires", "Microsoft.Component.MSBuild",
+                 "-find", r"MSBuild\**\Bin\MSBuild.exe"],
+                capture_output=True, text=True
+            )
+            path = result.stdout.strip().splitlines()[0]
+            if path and os.path.exists(path):
+                return path
+    try:
+        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\VisualStudio\SxS\VS7")
+        i = 0
+        while True:
+            name, value, _ = winreg.EnumValue(key, i)
+            candidate = os.path.join(value, r"MSBuild\Current\Bin\MSBuild.exe")
+            if os.path.exists(candidate):
+                return candidate
+            i += 1
+    except Exception:
+        pass
+
+    return None
 
 # Function to chose loader version
 def loader_version():
@@ -108,6 +142,50 @@ class ToolTip:
             self.tooltip.destroy()
             self.tooltip = None
 
+# Advanced options functions
+def advanced_options():
+    advanced = tk.Toplevel(root)
+    advanced.title("Axo McLCE ModLoader Advanced Settings")
+    advanced.logo = PhotoImage(file=resource_path("assets/logo.png"))
+    advanced.iconphoto(True, advanced.logo)
+    advanced.geometry("500x200")
+    advanced.resizable(False, False)
+
+    advanced.lift()
+    advanced.focus_force()
+    advanced.grab_set()
+
+    vs_selection_label = tk.Label(advanced, text="Select your Visual Studio version:")
+    vs_selection_label.place(relx=0.2, rely=0.05, anchor=tk.CENTER)
+    vs_combo = tk.ttk.Combobox(advanced, values=["VS 2022", "VS 2026"], state="readonly", width=12)
+    vs_combo.set(advanced_settings["vs_version"])
+    vs_combo.place(relx=0.12, rely=0.15, anchor=tk.CENTER)
+
+    vs_path_selection_label = tk.Label(advanced, text="Select your VS location:")
+    vs_path_selection_label.place(relx=0.15, rely=0.27, anchor=tk.CENTER)
+    vs_path_selection = tk.Entry(advanced, width=75)
+    vs_path_selection.insert(0, advanced_settings["msbuild_path"])
+    vs_path_selection.place(relx=0.48, rely=0.36, anchor=tk.CENTER)
+    vs_path_detect_button = tk.Button(advanced, text="Auto Detect", command= lambda:auto_detect())
+    vs_path_detect_button.place(relx=0.095, rely=0.49, anchor=tk.CENTER)
+
+    advanced_done_button = tk.Button(advanced, text="Done", command= lambda:on_done())
+    advanced_done_button.pack(pady=10)
+    advanced_done_button.place(relx=0.9, rely=0.85, anchor=tk.CENTER)
+
+    def on_done():
+        advanced_settings["msbuild_path"] = vs_path_selection.get()
+        advanced_settings["vs_version"] = vs_combo.get()
+        advanced.destroy()
+
+    def auto_detect():
+        path = find_msbuild()
+        if path:
+            vs_path_selection.delete(0, tk.END)
+            vs_path_selection.insert(0, path)
+        else:
+            tk.messagebox.showerror("Not Found", "Could not find MSBuild automatically.")
+
 # Function to handle the installation process
 def install_smartcmd_modloader():
     McLCE_Version = version_combo.get()
@@ -163,16 +241,20 @@ def install_smartcmd_modloader():
     # Function to perform the installation (copying files, etc.)
     def perform_installation():
         if McLCE_Version == "McLCE By Smartcmd":
-            if os.path.exists(destination):
-                shutil.rmtree(destination, onerror=remove_readonly)
-            for dirpath, dirnames, filenames in os.walk(source):
-                if stop_thread.is_set():
-                    return
-                rel = os.path.relpath(dirpath, source)
-                dest_dir = os.path.join(destination, rel)
-                os.makedirs(dest_dir, exist_ok=True)
-                for file in filenames:
-                    shutil.copy2(os.path.join(dirpath, file), os.path.join(dest_dir, file))
+            try:
+                if os.path.exists(destination):
+                    shutil.rmtree(destination, onerror=remove_readonly)
+                for dirpath, dirnames, filenames in os.walk(source):
+                    if stop_thread.is_set():
+                        return
+                    rel = os.path.relpath(dirpath, source)
+                    dest_dir = os.path.join(destination, rel)
+                    os.makedirs(dest_dir, exist_ok=True)
+                    for file in filenames:
+                        shutil.copy2(os.path.join(dirpath, file), os.path.join(dest_dir, file))
+            except Exception as e:
+                err = str(e)
+                root.after(0, lambda: tk.messagebox.showerror("Copy Error", f"Failed to copy files:\n{err}"))
 
     # Function to download the modloader files
     def download_modloader():
@@ -183,7 +265,7 @@ def install_smartcmd_modloader():
             target_dir = os.path.join(destination, "Minecraft.Client", "Windows64")
         os.makedirs(target_dir, exist_ok=True)
 
-        files = ["AxoModLoader.h", "AxoModLoader.cpp", "AxoAPI.h", "AxoAPI.cpp", "AxoItemImpl.cpp", "AxoBlockImpl.cpp"]
+        files = ["AxoModLoader.h", "AxoModLoader.cpp", "AxoAPI.h", "AxoAPI.cpp", "AxoItemImpl.cpp", "AxoBlockImpl.cpp", "AxoRecipeImpl.cpp"]
         for file in files:
             try:
                 response = requests.get(f"http://axoloader.eu/api/assets/modloader/{build_version}/{file}", timeout=10)
@@ -191,11 +273,15 @@ def install_smartcmd_modloader():
                 with open(os.path.join(target_dir, file), "wb") as f:
                     f.write(response.content)
             except requests.RequestException as e:
-                root.after(0, lambda: tk.messagebox.showerror("Error", f"Failed to download modloader files: {e}"))
+                err = str(e)
+                root.after(0, lambda: tk.messagebox.showerror("Download Error", f"Failed to download {file}:\n{err}"))
                 return
 
     # Functions to inject the modloader into the game
     def inject_modloader(filepath, search_line, inject_code):
+        if not os.path.exists(filepath):
+            root.after(0, lambda: tk.messagebox.showerror("Injection Error", f"File not found:\n{filepath}"))
+            return
         with open(filepath, "r", encoding="utf-8") as file:
             content = file.read()
         if inject_code in content:
@@ -206,6 +292,9 @@ def install_smartcmd_modloader():
             file.write(new_content)
 
     def inject_modloader_replace(filepath, search_line, inject_code):
+        if not os.path.exists(filepath):
+            root.after(0, lambda: tk.messagebox.showerror("Injection Error", f"File not found:\n{filepath}"))
+            return
         with open(filepath, "r", encoding="utf-8") as file:
             content = file.read()
         if inject_code in content:
@@ -216,6 +305,9 @@ def install_smartcmd_modloader():
             file.write(new_content)
 
     def inject_modloader_before(filepath, search_line, inject_code):
+        if not os.path.exists(filepath):
+            root.after(0, lambda: tk.messagebox.showerror("Injection Error", f"File not found:\n{filepath}"))
+            return
         with open(filepath, "r", encoding="utf-8") as file:
             content = file.read()
         if inject_code in content:
@@ -227,11 +319,15 @@ def install_smartcmd_modloader():
 
     # Function to inject code into the .vcxproj file to include the new modloader files
     def inject_vsxproj(filepath, search_line, inject_code):
+        if not os.path.exists(filepath):
+            root.after(0, lambda: tk.messagebox.showerror("vcxproj Error", f"File not found:\n{filepath}"))
+            return
         with open(filepath, "r", encoding="utf-8") as file:
             content = file.read()
         if inject_code in content:
             return
         if search_line not in content:
+            root.after(0, lambda: tk.messagebox.showerror("vcxproj Error", f"Anchor not found in vcxproj:\n{search_line}\n\nTry agian. If this keeps happening\n Please report this error to Axo Dev."))
             return
         new_content = content.replace(search_line, inject_code + "\n" + search_line)
         with open(filepath, "w", encoding="utf-8") as file:
@@ -240,10 +336,17 @@ def install_smartcmd_modloader():
 
     # Function to compile the project using MSBuild
     def compile_project():
+        if useAutocompiler.get() == 0:
+            return True
+    
         build_type = build_combo.get()
         if stop_thread.is_set():
             return
-        msbuild_path = r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+        msbuild_path = advanced_settings["msbuild_path"]
+        if not os.path.exists(msbuild_path):
+            root.after(0, lambda: tk.messagebox.showerror("MSBuild Not Found", 
+                "MSBuild not found at the specified path.\nCheck Advanced Settings."))
+            return False
         if McLCE_Version == "McLCE Nightly By Smartcmd":
             sln_path = os.path.join(source, "MinecraftConsoles.sln")
         else:
@@ -259,9 +362,10 @@ def install_smartcmd_modloader():
         if result.returncode != 0:
             stdout = result.stdout or ""
             stderr = result.stderr or ""
+            output = (stdout + stderr)[-1000:]
             root.after(0, lambda: tk.messagebox.showerror(
                 "Compilation Failed",
-                (stdout + stderr)[-500:]
+                f"MSBuild failed. Check that Visual Studio 2022 is installed.\n\n{output}"
             ))
             return False
         return True
@@ -288,6 +392,7 @@ def install_smartcmd_modloader():
         pstmh = os.path.join(base, "Minecraft.Client", "PreStitchedTextureMap.h")
         mcpp = os.path.join(base, "Minecraft.Client", "Minecraft.cpp")
         uiscene_mm_cpp = os.path.join(base, "Minecraft.Client", "Common", "UI", "UIScene_MainMenu.cpp")
+        recipes = os.path.join(base, "Minecraft.World", "Recipes.h")
         steps = [
             (40, "Copying files... (This may take a bit)", lambda: perform_installation()),
             (50, "Downloading modloader...", lambda: download_modloader()),
@@ -309,15 +414,15 @@ def install_smartcmd_modloader():
                 inject_modloader(mcpp, '#include "DLCTexturePack.h"', '#include "Windows64/AxoModLoader.h"'),
                 inject_modloader(pstmcpp, 'float vertRatio = 1.0f/32.0f;', '\n\t\tfor (auto& e : s_axoTerrainPendingIcons) {' '\n\t\t\tADD_ICON(e.row, e.col, e.name)' '\n\t\t}'),
                 inject_modloader(pstmcpp, 'std::vector<PreStitchedTextureMap::AxoIconSlot> PreStitchedTextureMap::s_axoPendingIcons;', 'std::vector<PreStitchedTextureMap::AxoTerrainIconSlot> PreStitchedTextureMap::s_axoTerrainPendingIcons;'),
-                inject_modloader(uiscene_mm_cpp, 'PIXEndNamedEvent();', '\n\n\t\tMinecraft *pMinecraft = Minecraft::GetInstance();\n\t\tFont *font = pMinecraft->font;\n\t\tCustomDrawData *cdd = ui.setupCustomDraw(this, region);\n\t\tdelete cdd;\n\t\tglDisable(GL_CULL_FACE);\n\t\tglDisable(GL_DEPTH_TEST);\n\t\tglPushMatrix();\n\t\tfloat scale = m_fScreenWidth / m_fRawWidth;\n\t\tfloat x = (-m_fRawWidth  / 2.2f) + 2.0f;\n\t\tfloat y = ( m_fRawHeight / 9.0f) - 10.0f;\n\t\tglTranslatef(x * scale, y * scale, 0);\n\t\tglScalef(scale, scale, scale);\n\t\tfont->drawShadow(L"AxoLoader v1.0.1", 0, 0, 0xAAAAAA);\n\t\tglPopMatrix();\n\t\tglEnable(GL_DEPTH_TEST);\n\t\tui.endCustomDraw(region);'
-)
+                inject_modloader(uiscene_mm_cpp, 'PIXEndNamedEvent();', '\n\n\t\tMinecraft *pMinecraft = Minecraft::GetInstance();\n\t\tFont *font = pMinecraft->font;\n\t\tCustomDrawData *cdd = ui.setupCustomDraw(this, region);\n\t\tdelete cdd;\n\t\tglDisable(GL_CULL_FACE);\n\t\tglDisable(GL_DEPTH_TEST);\n\t\tglPushMatrix();\n\t\tfloat scale = m_fScreenWidth / m_fRawWidth;\n\t\tfloat x = (-m_fRawWidth  / 2.2f) + 2.0f;\n\t\tfloat y = ( m_fRawHeight / 9.0f) - 10.0f;\n\t\tglTranslatef(x * scale, y * scale, 0);\n\t\tglScalef(scale, scale, scale);\n\t\tfont->drawShadow(L"AxoLoader v1.0.3", 0, 0, 0xAAAAAA);\n\t\tglPopMatrix();\n\t\tglEnable(GL_DEPTH_TEST);\n\t\tui.endCustomDraw(region);'),
+                inject_modloader_replace(recipes, "private:\n\tvoid buildRecipeIngredientsArray();", "public:\n\tvoid buildRecipeIngredientsArray();"),
             ]),
             (65, "Setting up dependencies...", lambda:[
                 inject_vsxproj(vcxproj,
-                    '    <ClCompile Include="Windows64\\Windows64_Minecraft.cpp">',
-                    '    <ClCompile Include="Windows64\\AxoAPI.cpp" />\n    <ClCompile Include="Windows64\\AxoModLoader.cpp" />\n    <ClCompile Include="Windows64\\AxoItemImpl.cpp" />\n    <ClCompile Include="Windows64\\AxoBlockImpl.cpp" />'),
+                    '<ClCompile Include="Windows64\\Windows64_Minecraft.cpp"',
+                    '    <ClCompile Include="Windows64\\AxoAPI.cpp" />\n    <ClCompile Include="Windows64\\AxoModLoader.cpp" />\n    <ClCompile Include="Windows64\\AxoItemImpl.cpp" />\n    <ClCompile Include="Windows64\\AxoBlockImpl.cpp" />\n    <ClCompile Include="Windows64\\AxoRecipeImpl.cpp" />'),
                 inject_vsxproj(vcxproj,
-                    '    <ClInclude Include="Windows64\\KeyboardMouseInput.h">',
+                    '<ClInclude Include="Windows64\\KeyboardMouseInput.h"',
                     '    <ClInclude Include="Windows64\\AxoAPI.h" />\n    <ClInclude Include="Windows64\\AxoModLoader.h" />'),
             ]),
             (70, "Setting up project...", lambda: create_mods()),
@@ -451,6 +556,8 @@ root.resizable(False, False)
 # Variable to track the state of the shortcut checkbox
 doShortcut = tk.IntVar()
 
+useAutocompiler = tk.IntVar(value=1)
+
 # Create a section for directory selection
 directory_label = tk.Label(root, text="Select the download directory:")
 directory_label.pack(pady=10)
@@ -500,6 +607,8 @@ version_combo.bind("<<ComboboxSelected>>", version_selected)
 
 # Shortcut checkbox
 tk.Checkbutton(root, text="Create desktop shortcut?", variable=doShortcut).place(relx=0.1925, rely=0.8, anchor=tk.CENTER)
+
+tk.Checkbutton(root, text="Use Autocompiler?", variable=useAutocompiler).place(relx=0.5, rely=0.8, anchor=tk.CENTER)
 
 # Center the window on the screen
 root.update_idletasks()
@@ -554,6 +663,9 @@ build_combo.place(relx=0.767, rely=0.55, anchor=tk.CENTER)
 developer_label = tk.Label(root, text="Developed by KaDerox :D", font=("Arial", 6, "italic"))
 developer_label.pack(pady=10)
 developer_label.place(relx=0.5, rely=0.95, anchor=tk.CENTER)
+
+advanced_button = tk.Button(root, text="Advanced", command=lambda: advanced_options())
+advanced_button.place(relx=0.1, rely=0.9, anchor=tk.CENTER)
 
 threading.Thread(target=fetch_loader_versions, daemon=True).start()
 root.mainloop()
