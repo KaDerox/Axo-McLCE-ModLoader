@@ -215,7 +215,7 @@ exampleShapeless.ingredients[0] = "diamond";
 exampleShapeless.ingredients[1] = "emerald";
 exampleShapeless.ingredients[2] = "ender_pearl";
 exampleShapeless.ingredientCount = 3;
-exampleShapeless.recipeGroup = AxoTab_Armor; // Declares which crafting tab is in
+exampleShapeless.recipeGroup = AxoRecipe_Armor; // Declares which crafting tab is in
 
 AxoAPI_RegisterRecipe(&exampleShapeless);
 ```
@@ -236,7 +236,7 @@ exampleShaped.grid[5] = { "" };
 exampleShaped.grid[6] = { "" };
 exampleShaped.grid[7] = { "stick" };
 exampleShaped.grid[8] = { "" };
-exampleShaped.recipeGroup = AxoTab_Armor;
+exampleShaped.recipeGroup = AxoRecipe_Armor;
 
 AxoAPI_RegisterRecipe(&exampleShaped);
 ```
