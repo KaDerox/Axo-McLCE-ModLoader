@@ -36,10 +36,12 @@ If you want to create mods for AxoLoader you can read under this section about m
 - [x] Food items
 - [x] Custom swords, pickaxes, axes and shovels
 - [x] Custom recipes (may be bit bugged)
+- [x] Custom block generation in the world and nether
+- [x] Custom plants
+- [x] Cross texture blocks
 
 **WIP AxoAPI features:**
 - [ ] Custom entities
-- [ ] Custom block generation in the world
 - [ ] Custom block models
 - [ ] Custom item models
 
@@ -248,6 +250,31 @@ Creating recipes here is a bit harder than with others. Here is a table showing 
 | 6 | 7 | 8 |
 
 Now you know how to add custom recipes using Axo!
+
+### Custom ore generation in nether
+It's simple!
+```
+AxoBlockDef exampleNetherOre;
+exampleNetherOre.dropItemName = "Ruby";
+exampleNetherOre.dropCount = 3;
+exampleNetherOre.iconName = L"hell_ore";
+exampleNetherOre.name = "Hell Ore";
+exampleNetherOre.hardness = 0.5f;
+exampleNetherOre.resistance = 10.0f;
+exampleNetherOre.creativeTab = AxoTab_BuildingBlocks;
+exampleNetherOre.spawn.enabled = true; // Declares if spawning is enabled
+exampleNetherOre.spawn.likeOre = true; // Declares if it spawns like ores
+block5.spawn.inOverworld = false; // Does it spawn in overworld?
+exampleNetherOre.spawn.inNether = true; // Does it spawn in nether?
+exampleNetherOre.spawn.frequency = 100; // Frequency of spawning
+exampleNetherOre.spawn.veinSize = 4; // Max vein size
+exampleNetherOre.spawn.yLevelMin = 0; // Min. y Level of spawning
+exampleNetherOre.spawn.yLevelMax = 70; // Max. y Level of spawning
+if AxoAPI_RegisterBlock(&exampleNetherOre)
+        AxoAPI_Log("Example Nether Ore DONE.");
+else
+        AxoAPI_Log("Example Nether Ore ERROR.");
+```
 
 ### Adding textures
 In the folder with manifest.json and mod.dll, you should have a textures folder with two subfolders: terrain and items. In the terrain folder you put block textures, and in the items folder you put item textures.
