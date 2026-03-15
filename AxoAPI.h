@@ -5,6 +5,10 @@
 #define AXO_ID_AUTO  0
 #define AXO_DROP_SELF ""
 
+class Level;
+class Player;
+class ItemInstance;
+
 enum AxoCreativeTab {
     AxoTab_BuildingBlocks = 0,
     AxoTab_Decoration     = 1,
@@ -39,15 +43,12 @@ struct AxoItemDef {
     int              creativeTab  = AxoTab_Misc;
     std::function<void()> onUse   = nullptr;
     std::function<void()> onUseOn = nullptr;
-
     int              attackDamage = 1;
-
     float            miningSpeed  = 1.0f;
     bool             isPickaxe    = false;
     bool             isAxe        = false;
     bool             isShovel     = false;
     bool             isHandheld   = false;
-
     bool             isEdible     = false;
     AxoFoodDef       food;
 };
@@ -60,28 +61,60 @@ enum AxoMaterial {
     AxoMat_Metal = 4,
 };
 
+struct AxoBlockSpawnDef {
+    bool        enabled      = false;
+    bool        likeOre      = true;
+    bool        likeGrass    = false;
+    int         frequency    = 8;
+    int         veinSize     = 8;
+    int         yLevelMin    = 0;
+    int         yLevelMax    = 64;
+    std::string inBiome      = "";
+    bool        onWater      = false;
+    bool        onTerrain    = true;
+    bool        inNether     = false;
+    bool        inOverworld  = true;
+};
+
+enum AxoRenderShape {
+    AxoShape_Cube  = 0,
+    AxoShape_Cross = 1,
+};
+
 struct AxoBlockDef {
-    int          id           = AXO_ID_AUTO;
-    std::wstring iconName;
-    std::string  name;
-    AxoMaterial  material     = AxoMat_Stone;
-    float        hardness     = 1.5f;
-    float        resistance   = 10.0f;
-    int          creativeTab  = 0;
-    std::string  dropItemName = AXO_DROP_SELF;
-    int          dropCount    = 1;
+    int              id                   = AXO_ID_AUTO;
+    std::wstring     iconName;
+    std::string      name;
+    AxoMaterial      material             = AxoMat_Stone;
+    float            hardness             = 1.5f;
+    float            resistance           = 10.0f;
+    int              creativeTab          = 0;
+    std::string      dropItemName         = AXO_DROP_SELF;
+    int              dropCount            = 1;
+    AxoRenderShape   renderShape          = AxoShape_Cube;
+    bool             noCollision          = false;
+    bool             canBeBrokenByHand    = false;
+    std::string      canBePlacedOnlyOn    = "";
+    AxoBlockSpawnDef spawn;
+    std::function<void(int x, int y, int z, Level*, Player*, ItemInstance*)> onDestroyed = nullptr;
 };
 
 struct AxoBlockDefInternal {
-    int          id;
-    std::wstring iconName;
-    std::string  name;
-    AxoMaterial  material;
-    float        hardness;
-    float        resistance;
-    int          creativeTab;
-    int          dropItemId;
-    int          dropCount;
+    int              id;
+    std::wstring     iconName;
+    std::string      name;
+    AxoMaterial      material;
+    float            hardness;
+    float            resistance;
+    int              creativeTab;
+    int              dropItemId;
+    int              dropCount;
+    AxoRenderShape   renderShape;
+    bool             noCollision;
+    bool             canBeBrokenByHand;
+    int              placeOnTileId;
+    AxoBlockSpawnDef spawn;
+    std::function<void(int, int, int, Level*, Player*, ItemInstance*)> onDestroyed = nullptr;
 };
 
 struct AxoCraftingSlot {
@@ -100,16 +133,16 @@ enum AxoRecipeGroup {
 };
 
 struct AxoRecipeDef {
-    std::string resultItemName;
-    int         resultCount     = 1;
-    bool isShaped    = true;
-    bool isFurnace   = false;
-    int  recipeGroup = AxoRecipe_Decoration;
+    std::string     resultItemName;
+    int             resultCount     = 1;
+    bool            isShaped        = true;
+    bool            isFurnace       = false;
+    int             recipeGroup     = AxoRecipe_Decoration;
     AxoCraftingSlot grid[9];
-    std::string ingredients[9];
-    int         ingredientCount = 0;
-    std::string furnaceInputName;
-    float       furnaceXP = 0.1f;
+    std::string     ingredients[9];
+    int             ingredientCount = 0;
+    std::string     furnaceInputName;
+    float           furnaceXP       = 0.1f;
 };
 
 struct AxoMod {
@@ -134,7 +167,7 @@ inline void AxoMod_SetAPI(AxoAPITable* api) { gAxoAPI = api; }
 extern AxoAPITable* gAxoAPI;
 #endif
 
-#define AxoAPI_Log(msg)            (gAxoAPI->Log(MOD_ID, msg))
-#define AxoAPI_RegisterItem(def)   (gAxoAPI->RegisterItem(def))
-#define AxoAPI_RegisterBlock(def)  (gAxoAPI->RegisterBlock(def))
+#define AxoAPI_Log(msg)             (gAxoAPI->Log(MOD_ID, msg))
+#define AxoAPI_RegisterItem(def)    (gAxoAPI->RegisterItem(def))
+#define AxoAPI_RegisterBlock(def)   (gAxoAPI->RegisterBlock(def))
 #define AxoAPI_RegisterRecipe(def)  (gAxoAPI->RegisterRecipe(def))
