@@ -3,6 +3,7 @@
 #include "AxoAPI.h"
 #include "AxoModLoader.h"
 #include "AxoWorldGen.h"
+#include "AxoModelLoader.h"
 
 #include <vector>
 #include <string>
@@ -14,6 +15,11 @@ extern void AxoItem_AddToCreativeMenu(int itemId, int creativeTab);
 extern bool AxoBlock_CreateFromDef(const AxoBlockDefInternal& def);
 extern void AxoBlock_AddToCreativeMenu(int blockId, int creativeTab);
 extern bool AxoRecipe_CreateFromDef(const AxoRecipeDef& def);
+extern bool AxoBiome_CreateFromDef(const AxoBiomeDef& def);
+extern bool AxoCrop_CreateFromDef(const AxoCropDef& def);
+
+static std::vector<AxoBiomeDef> sPendingBiomes;
+static std::vector<AxoCropDef>  sPendingCrops;
 
 AxoAPITable* gAxoAPI = nullptr;
 
@@ -219,11 +225,49 @@ static bool Impl_RegisterRecipe(const AxoRecipeDef* def) {
     return true;
 }
 
+static int sNextBiomeId = 23;
+
+static bool Impl_RegisterBiome(const AxoBiomeDef* def) {
+    if (!def) return false;
+    AxoBiomeDef resolved = *def;
+    if (resolved.id == AXO_ID_AUTO) {
+        if (sNextBiomeId > 255) {
+            printf("[AxoLoader] RegisterBiome: no free biome IDs left.\n");
+            return false;
+        }
+        resolved.id = sNextBiomeId++;
+    }
+    if (resolved.id < 23 || resolved.id > 255) {
+        printf("[AxoLoader] RegisterBiome: id %d out of range (23-255).\n", resolved.id);
+        return false;
+    }
+    sPendingBiomes.push_back(resolved);
+    printf("[AxoLoader] Queued biome id=%d \"%s\"\n", resolved.id, resolved.name.c_str());
+    return true;
+}
+
+static bool Impl_RegisterCrop(const AxoCropDef* def) {
+    if (!def) return false;
+    AxoCropDef resolved = *def;
+    if (resolved.id == AXO_ID_AUTO) {
+        if (sNextBlockId > 255) {
+            printf("[AxoLoader] RegisterCrop: no free block IDs left.\n");
+            return false;
+        }
+        resolved.id = sNextBlockId++;
+    }
+    sPendingCrops.push_back(resolved);
+    printf("[AxoLoader] Queued crop id=%d \"%s\"\n", resolved.id, resolved.name.c_str());
+    return true;
+}
+
 static AxoAPITable sAPITable = {
     Impl_Log,
     Impl_RegisterItem,
     Impl_RegisterBlock,
-    Impl_RegisterRecipe
+    Impl_RegisterRecipe,
+    Impl_RegisterBiome,
+    Impl_RegisterCrop
 };
 
 AxoAPITable* AxoAPI_GetTable() {
@@ -256,11 +300,21 @@ void AxoAPI_FlushBlockRegistrations() {
         internal.noCollision       = def.noCollision;
         internal.canBeBrokenByHand = def.canBeBrokenByHand;
         internal.placeOnTileId     = ResolveTileName(def.canBePlacedOnlyOn);
+        internal.customModel       = def.customModel;
+        internal.hasDifferentSides = def.hasDifferentSides;
+        internal.iconTop           = def.iconTop;
+        internal.iconBottom        = def.iconBottom;
+        internal.iconNorth         = def.iconNorth;
+        internal.iconSouth         = def.iconSouth;
+        internal.iconEast          = def.iconEast;
+        internal.iconWest          = def.iconWest;
         internal.spawn         = def.spawn;
         internal.onDestroyed   = def.onDestroyed;
         if (AxoBlock_CreateFromDef(internal)) {
             sRegisteredBlocks.push_back({def.id, def.creativeTab, def.name});
             AxoWorldGen_RegisterSpawn(def.id, def.spawn);
+            if (!def.customModel.empty())
+                AxoModelLoader_Register(def.id, def.customModel);
         }
     }
     sPendingBlocks.clear();
@@ -282,10 +336,31 @@ void AxoAPI_FlushRecipeRegistrations() {
     sPendingRecipes.clear();
 }
 
+void AxoAPI_FlushBiomeRegistrations() {
+    printf("[AxoLoader] FlushBiomeRegistrations: %u biome(s)...\n", (unsigned)sPendingBiomes.size());
+    for (const auto& def : sPendingBiomes)
+        AxoBiome_CreateFromDef(def);
+    sPendingBiomes.clear();
+}
+
+void AxoAPI_FlushCropRegistrations() {
+    printf("[AxoLoader] FlushCropRegistrations: %u crop(s)...\n", (unsigned)sPendingCrops.size());
+    for (const auto& def : sPendingCrops)
+        AxoCrop_CreateFromDef(def);
+    sPendingCrops.clear();
+}
+
+void AxoAPI_RegisterCropSeedForCreative(int seedItemId, int creativeTab) {
+    sRegisteredItems.push_back({seedItemId, creativeTab, ""});
+}
+
 int AxoAPI_ResolveItemName(const std::string& name) {
     const auto& map = GetVanillaItemMap();
     auto it = map.find(name);
     if (it != map.end()) return it->second;
+    const auto& tileMap = GetVanillaTileMap();
+    auto it2 = tileMap.find(name);
+    if (it2 != tileMap.end()) return it2->second;
     for (const auto& r : sRegisteredItems) {
         if (r.name == name) return r.id;
     }
@@ -296,8 +371,12 @@ int AxoAPI_ResolveItemName(const std::string& name) {
 }
 
 int AxoAPI_ResolveBlockName(const std::string& name) {
+    const auto& map = GetVanillaTileMap();
+    auto it = map.find(name);
+    if (it != map.end()) return it->second;
     for (const auto& r : sRegisteredBlocks) {
         if (r.name == name) return r.id;
     }
+    printf("[AxoLoader] ResolveBlockName: unknown block \"%s\"\n", name.c_str());
     return -1;
 }
