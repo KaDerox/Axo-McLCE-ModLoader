@@ -28,11 +28,18 @@ enum AxoCreativeTab {
 #define AXO_SATURATION_MAX           1.0f
 #define AXO_SATURATION_SUPERNATURAL  1.2f
 
+struct AxoFoodEffect {
+    std::string effectName = "";
+    int         duration   = 0;
+    int         amplifier  = 0;
+};
+
 struct AxoFoodDef {
-    int   nutrition    = 4;
-    float saturation   = AXO_SATURATION_NORMAL;
-    bool  isMeat       = false;
-    bool  canAlwaysEat = false;
+    int          nutrition    = 4;
+    float        saturation   = AXO_SATURATION_NORMAL;
+    bool         isMeat       = false;
+    bool         canAlwaysEat = false;
+    AxoFoodEffect effect;
 };
 
 struct AxoItemDef {
@@ -95,6 +102,14 @@ struct AxoBlockDef {
     bool             noCollision          = false;
     bool             canBeBrokenByHand    = false;
     std::string      canBePlacedOnlyOn    = "";
+    std::string      customModel          = "";
+    bool             hasDifferentSides    = false;
+    std::wstring     iconTop;
+    std::wstring     iconBottom;
+    std::wstring     iconNorth;
+    std::wstring     iconSouth;
+    std::wstring     iconEast;
+    std::wstring     iconWest;
     AxoBlockSpawnDef spawn;
     std::function<void(int x, int y, int z, Level*, Player*, ItemInstance*)> onDestroyed = nullptr;
 };
@@ -113,6 +128,14 @@ struct AxoBlockDefInternal {
     bool             noCollision;
     bool             canBeBrokenByHand;
     int              placeOnTileId;
+    std::string      customModel;
+    bool             hasDifferentSides;
+    std::wstring     iconTop;
+    std::wstring     iconBottom;
+    std::wstring     iconNorth;
+    std::wstring     iconSouth;
+    std::wstring     iconEast;
+    std::wstring     iconWest;
     AxoBlockSpawnDef spawn;
     std::function<void(int, int, int, Level*, Player*, ItemInstance*)> onDestroyed = nullptr;
 };
@@ -132,6 +155,28 @@ enum AxoRecipeGroup {
     AxoRecipe_Decoration  = 6,
 };
 
+struct AxoBiomeDef {
+    int              id           = AXO_ID_AUTO;
+    std::string      name;
+    float            temperature  = 0.5f;
+    float            downfall     = 0.5f;
+    float            depth        = 0.1f;
+    float            scale        = 0.3f;
+    float            hilliness    = 0.0f;
+    int              grassColor   = 0x79C05A;
+    int              foliageColor = 0x59AE30;
+    int              waterColor   = 0x3F76E4;
+    int              skyColor     = 0x78A7FF;
+    bool             hasRain      = true;
+    bool             hasSnow      = false;
+    int              spawnWeight  = 10;
+    std::string      topMaterial  = "grass";
+    std::string      material     = "dirt";
+    int              treeCount    = 0;
+    int              grassCount   = 1;
+    int              flowerCount  = 2;
+};
+
 struct AxoRecipeDef {
     std::string     resultItemName;
     int             resultCount     = 1;
@@ -145,6 +190,23 @@ struct AxoRecipeDef {
     float           furnaceXP       = 0.1f;
 };
 
+struct AxoCropGrowDrop {
+    std::string itemName;
+    int         count          = 1;
+    int         seedDropCount  = 1;
+    int         bonusDropMax   = 0;
+};
+
+struct AxoCropDef {
+    int              id              = AXO_ID_AUTO;
+    std::string      name;
+    std::wstring     stageTextures[8];
+    std::wstring     seedIconName;
+    std::string      seedName;
+    int              seedCreativeTab = AxoTab_Materials;
+    AxoCropGrowDrop  growDrop;
+};
+
 struct AxoMod {
     const char* id;
 };
@@ -154,6 +216,8 @@ struct AxoAPITable {
     bool (*RegisterItem)(const AxoItemDef* def);
     bool (*RegisterBlock)(const AxoBlockDef* def);
     bool (*RegisterRecipe)(const AxoRecipeDef* def);
+    bool (*RegisterBiome)(const AxoBiomeDef* def);
+    bool (*RegisterCrop)(const AxoCropDef* def);
 };
 
 #ifndef MOD_ID
@@ -171,3 +235,5 @@ extern AxoAPITable* gAxoAPI;
 #define AxoAPI_RegisterItem(def)    (gAxoAPI->RegisterItem(def))
 #define AxoAPI_RegisterBlock(def)   (gAxoAPI->RegisterBlock(def))
 #define AxoAPI_RegisterRecipe(def)  (gAxoAPI->RegisterRecipe(def))
+#define AxoAPI_RegisterBiome(def)   (gAxoAPI->RegisterBiome(def))
+#define AxoAPI_RegisterCrop(def)    (gAxoAPI->RegisterCrop(def))
