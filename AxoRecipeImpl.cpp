@@ -13,13 +13,13 @@ static int ResolveItemName(const std::string& name) {
 
 static wchar_t GroupFromTab(int group) {
     switch (group) {
-    case 0:  return L'F'; // AxoRecipe_Food       - Food
-    case 1:  return L'T'; // AxoRecipe_Tools      - Tools and Weapons
-    case 2:  return L'A'; // AxoRecipe_Armor      - Armor
-    case 3:  return L'M'; // AxoRecipe_Mechanisms - Mechanisms
-    case 4:  return L'V'; // AxoRecipe_Transport  - Transport
-    case 5:  return L'S'; // AxoRecipe_Structures - Structures
-    default: return L'D'; // AxoRecipe_Decoration - Decoration
+    case 0:  return L'F';
+    case 1:  return L'T';
+    case 2:  return L'A';
+    case 3:  return L'M';
+    case 4:  return L'V';
+    case 5:  return L'S';
+    default: return L'D';
     }
 }
 
