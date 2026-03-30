@@ -31,38 +31,18 @@ username = getpass.getuser()
 # Global variable to cache the changelog content
 _changelog_cache = None
 
+# Find cmake instead of hardcoding it 
+def find_cmake():
+    for drive in "CDEFGHIJKLMNOPQRSTUVWXYZ":
+        path = rf"{drive}:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
+        if os.path.exists(path):
+            return path
+    return None
+
 advanced_settings = {
-    "msbuild_path": r"C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+    "cmake_path": find_cmake() or "cmake",
     "vs_version": "VS 2022"
 }
-
-# Find msbuild instead of hardcoding it 
-def find_msbuild():
-    for drive in "CDEFGHIJKLMNOPQRSTUVWXYZ":
-        vswhere = rf"{drive}:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-        if os.path.exists(vswhere):
-            result = subprocess.run(
-                [vswhere, "-latest", "-requires", "Microsoft.Component.MSBuild",
-                 "-find", r"MSBuild\**\Bin\MSBuild.exe"],
-                capture_output=True, text=True
-            )
-            path = result.stdout.strip().splitlines()[0]
-            if path and os.path.exists(path):
-                return path
-    try:
-        key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-            r"SOFTWARE\Microsoft\VisualStudio\SxS\VS7")
-        i = 0
-        while True:
-            name, value, _ = winreg.EnumValue(key, i)
-            candidate = os.path.join(value, r"MSBuild\Current\Bin\MSBuild.exe")
-            if os.path.exists(candidate):
-                return candidate
-            i += 1
-    except Exception:
-        pass
-
-    return None
 
 # Function to chose loader version
 def loader_version():
@@ -95,7 +75,7 @@ def browse_directory():
 
 # Function to validate the selected directory
 def smartcmd_validate_directory(path):
-    sln_path = os.path.join(path, "MinecraftConsoles.sln")
+    sln_path = os.path.join(path, "CMakePresets.json")
 
     if os.path.exists(sln_path):
         return True , "Valid directory selected."
@@ -150,7 +130,6 @@ def advanced_options():
     advanced.iconphoto(True, advanced.logo)
     advanced.geometry("500x200")
     advanced.resizable(False, False)
-
     advanced.lift()
     advanced.focus_force()
     advanced.grab_set()
@@ -161,30 +140,29 @@ def advanced_options():
     vs_combo.set(advanced_settings["vs_version"])
     vs_combo.place(relx=0.12, rely=0.15, anchor=tk.CENTER)
 
-    vs_path_selection_label = tk.Label(advanced, text="Select your VS location:")
-    vs_path_selection_label.place(relx=0.15, rely=0.27, anchor=tk.CENTER)
-    vs_path_selection = tk.Entry(advanced, width=75)
-    vs_path_selection.insert(0, advanced_settings["msbuild_path"])
-    vs_path_selection.place(relx=0.48, rely=0.36, anchor=tk.CENTER)
-    vs_path_detect_button = tk.Button(advanced, text="Auto Detect", command= lambda:auto_detect())
-    vs_path_detect_button.place(relx=0.095, rely=0.49, anchor=tk.CENTER)
+    cmake_path_label = tk.Label(advanced, text="Select your CMake location:")
+    cmake_path_label.place(relx=0.17, rely=0.27, anchor=tk.CENTER)
+    cmake_path_entry = tk.Entry(advanced, width=75)
+    cmake_path_entry.insert(0, advanced_settings["cmake_path"])
+    cmake_path_entry.place(relx=0.48, rely=0.36, anchor=tk.CENTER)
+    cmake_detect_button = tk.Button(advanced, text="Auto Detect", command=lambda: auto_detect())
+    cmake_detect_button.place(relx=0.095, rely=0.49, anchor=tk.CENTER)
 
-    advanced_done_button = tk.Button(advanced, text="Done", command= lambda:on_done())
-    advanced_done_button.pack(pady=10)
+    advanced_done_button = tk.Button(advanced, text="Done", command=lambda: on_done())
     advanced_done_button.place(relx=0.9, rely=0.85, anchor=tk.CENTER)
 
     def on_done():
-        advanced_settings["msbuild_path"] = vs_path_selection.get()
+        advanced_settings["cmake_path"] = cmake_path_entry.get()
         advanced_settings["vs_version"] = vs_combo.get()
         advanced.destroy()
 
     def auto_detect():
-        path = find_msbuild()
+        path = find_cmake()
         if path:
-            vs_path_selection.delete(0, tk.END)
-            vs_path_selection.insert(0, path)
+            cmake_path_entry.delete(0, tk.END)
+            cmake_path_entry.insert(0, path)
         else:
-            tk.messagebox.showerror("Not Found", "Could not find MSBuild automatically.")
+            tk.messagebox.showerror("Not Found", "Could not find CMake automatically.")
 
 # Function to handle the installation process
 def install_smartcmd_modloader():
@@ -228,7 +206,7 @@ def install_smartcmd_modloader():
     def create_mods():
         selected_build = build_combo.get()
         if McLCE_Version == "McLCE Nightly By Smartcmd":
-            destination_mod = os.path.join(source, "x64", selected_build)
+            destination_mod = os.path.join(source, "build", "windows64", "Minecraft.Client", selected_build)
         else:
             destination_mod = os.path.join(destination, "x64", selected_build)
         os.makedirs(os.path.join(destination_mod, 'mods'), exist_ok=True)
@@ -265,7 +243,7 @@ def install_smartcmd_modloader():
             target_dir = os.path.join(destination, "Minecraft.Client", "Windows64")
         os.makedirs(target_dir, exist_ok=True)
 
-        files = ["AxoModLoader.h", "AxoModLoader.cpp", "AxoAPI.h", "AxoAPI.cpp", "AxoItemImpl.cpp", "AxoBlockImpl.cpp", "AxoRecipeImpl.cpp", "AxoWorldGen.cpp", "AxoWorldGen.h"]
+        files = ["AxoModLoader.h", "AxoModLoader.cpp", "AxoAPI.h", "AxoAPI.cpp", "AxoItemImpl.cpp", "AxoBlockImpl.cpp", "AxoRecipeImpl.cpp", "AxoWorldGen.cpp", "AxoWorldGen.h", "AxoCropImpl.cpp", "AxoModelLoader.cpp", "AxoModelLoader.h", "AxoBiomeImpl.cpp", "AxoBlockImpl.h"]
         for file in files:
             try:
                 response = requests.get(f"http://axoloader.eu/api/assets/modloader/{build_version}/{file}", timeout=10)
@@ -318,56 +296,70 @@ def install_smartcmd_modloader():
             file.write(new_content)
 
     # Function to inject code into the .vcxproj file to include the new modloader files
-    def inject_vsxproj(filepath, search_line, inject_code):
+    def inject_cmakelists(filepath, search_line, inject_code):
         if not os.path.exists(filepath):
-            root.after(0, lambda: tk.messagebox.showerror("vcxproj Error", f"File not found:\n{filepath}"))
+            root.after(0, lambda: tk.messagebox.showerror("CMakeLists Error", f"File not found:\n{filepath}"))
             return
         with open(filepath, "r", encoding="utf-8") as file:
             content = file.read()
         if inject_code in content:
             return
         if search_line not in content:
-            root.after(0, lambda: tk.messagebox.showerror("vcxproj Error", f"Anchor not found in vcxproj:\n{search_line}\n\nTry agian. If this keeps happening\n Please report this error to Axo Dev."))
+            root.after(0, lambda: tk.messagebox.showerror("CMakeLists Error", f"Anchor not found:\n{search_line}"))
             return
-        new_content = content.replace(search_line, inject_code + "\n" + search_line)
+        new_content = content.replace(search_line, search_line + "\n" + inject_code)
         with open(filepath, "w", encoding="utf-8") as file:
             file.write(new_content)
-        print(f"Injected into {filepath}: {inject_code}")
+
+    def check_build_environment():
+        sdk_path = r"C:\Program Files (x86)\Windows Kits\10\Include"
+        if not os.path.exists(sdk_path) or not os.listdir(sdk_path):
+            root.after(0, lambda: tk.messagebox.showerror(
+                "Missing Dependencies",
+                "Windows SDK not found.\n\n"
+                "Please install it via Visual Studio Installer:\n"
+                "- Desktop development with C++\n"
+                "- Windows 10/11 SDK"
+            ))
+            return False
+        return True
 
     # Function to compile the project using MSBuild
     def compile_project():
         if useAutocompiler.get() == 0:
             return True
-    
+
         build_type = build_combo.get()
         if stop_thread.is_set():
-            return
-        msbuild_path = advanced_settings["msbuild_path"]
-        if not os.path.exists(msbuild_path):
-            root.after(0, lambda: tk.messagebox.showerror("MSBuild Not Found", 
-                "MSBuild not found at the specified path.\nCheck Advanced Settings."))
             return False
-        if McLCE_Version == "McLCE Nightly By Smartcmd":
-            sln_path = os.path.join(source, "MinecraftConsoles.sln")
-        else:
-            sln_path = os.path.join(destination, "MinecraftConsoles.sln")
 
-        result = subprocess.run(
-            [msbuild_path, sln_path, f"/p:Configuration={build_type}", "/p:Platform=Windows64"],
-            capture_output=True,
-            encoding="utf-8",
-            errors="replace",
-        )
+        cmake_path = advanced_settings["cmake_path"]
+        base = source if McLCE_Version == "McLCE Nightly By Smartcmd" else destination
 
-        if result.returncode != 0:
-            stdout = result.stdout or ""
-            stderr = result.stderr or ""
-            output = (stdout + stderr)[-1000:]
-            root.after(0, lambda: tk.messagebox.showerror(
-                "Compilation Failed",
-                f"MSBuild failed. Check that Visual Studio 2022 is installed.\n\n{output}"
-            ))
+        vs_version = advanced_settings["vs_version"]
+        vcvars = rf"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat"
+        if not os.path.exists(vcvars):
+            root.after(0, lambda: tk.messagebox.showerror("VS Not Found", "vcvarsall.bat not found.\nCheck Advanced Settings."))
             return False
+
+        preset = "windows64-debug" if build_type == "Debug" else "windows64-release"
+
+        configure_cmd = f'"{vcvars}" x64 && "{cmake_path}" --preset windows64'
+        build_cmd = f'"{vcvars}" x64 && "{cmake_path}" --build --preset {preset} --target Minecraft.Client'
+
+        for cmd in [configure_cmd, build_cmd]:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                encoding="utf-8",
+                errors="replace",
+                cwd=base,
+                shell=True
+            )
+            if result.returncode != 0:
+                output = (result.stdout + result.stderr)[-1000:]
+                root.after(0, lambda o=output: tk.messagebox.showerror("Compilation Failed", f"CMake build failed.\n\n{o}"))
+                return False
         return True
 
     # Function to handle cancellation of the installation
@@ -398,6 +390,9 @@ def install_smartcmd_modloader():
         hell_flat = os.path.join(base, "Minecraft.World", "HellFlatLevelSource.cpp")
         survival_mode = os.path.join(base, "Minecraft.Client", "SurvivalMode.cpp")
         tile_h = os.path.join(base, "Minecraft.World", "Tile.h")
+        biome_intit_layer = os.path.join(base, "Minecraft.World", "BiomeInitLayer.cpp")
+        tile_renderer = os.path.join(base, "Minecraft.Client", "TileRenderer.cpp")
+        dye_powder_item = os.path.join(base, "Minecraft.World", "DyePowderItem.cpp")
         steps = [
             (40, "Copying files... (This may take a bit)", lambda: perform_installation()),
             (50, "Downloading modloader...", lambda: download_modloader()),
@@ -419,7 +414,7 @@ def install_smartcmd_modloader():
                 inject_modloader(mcpp, '#include "DLCTexturePack.h"', '#include "Windows64/AxoModLoader.h"'),
                 inject_modloader(pstmcpp, 'float vertRatio = 1.0f/32.0f;', '\n\t\tfor (auto& e : s_axoTerrainPendingIcons) {' '\n\t\t\tADD_ICON(e.row, e.col, e.name)' '\n\t\t}'),
                 inject_modloader(pstmcpp, 'std::vector<PreStitchedTextureMap::AxoIconSlot> PreStitchedTextureMap::s_axoPendingIcons;', 'std::vector<PreStitchedTextureMap::AxoTerrainIconSlot> PreStitchedTextureMap::s_axoTerrainPendingIcons;'),
-                inject_modloader(uiscene_mm_cpp, 'PIXEndNamedEvent();', '\n\n\t\tMinecraft *pMinecraft = Minecraft::GetInstance();\n\t\tFont *font = pMinecraft->font;\n\t\tCustomDrawData *cdd = ui.setupCustomDraw(this, region);\n\t\tdelete cdd;\n\t\tglDisable(GL_CULL_FACE);\n\t\tglDisable(GL_DEPTH_TEST);\n\t\tglPushMatrix();\n\t\tfloat scale = m_fScreenWidth / m_fRawWidth;\n\t\tfloat x = (-m_fRawWidth  / 2.2f) + 2.0f;\n\t\tfloat y = ( m_fRawHeight / 9.0f) - 10.0f;\n\t\tglTranslatef(x * scale, y * scale, 0);\n\t\tglScalef(scale, scale, scale);\n\t\tfont->drawShadow(L"AxoLoader v1.0.5", 0, 0, 0xAAAAAA);\n\t\tglPopMatrix();\n\t\tglEnable(GL_DEPTH_TEST);\n\t\tui.endCustomDraw(region);'),
+                inject_modloader(uiscene_mm_cpp, 'PIXEndNamedEvent();', '\n\n\t\tMinecraft *pMinecraft = Minecraft::GetInstance();\n\t\tFont *font = pMinecraft->font;\n\t\tCustomDrawData *cdd = ui.setupCustomDraw(this, region);\n\t\tdelete cdd;\n\t\tglDisable(GL_CULL_FACE);\n\t\tglDisable(GL_DEPTH_TEST);\n\t\tglPushMatrix();\n\t\tfloat scale = m_fScreenWidth / m_fRawWidth;\n\t\tfloat x = (-m_fRawWidth  / 2.2f) + 2.0f;\n\t\tfloat y = ( m_fRawHeight / 9.0f) - 10.0f;\n\t\tglTranslatef(x * scale, y * scale, 0);\n\t\tglScalef(scale, scale, scale);\n\t\tfont->drawShadow(L"AxoLoader v1.0.7", 0, 0, 0xAAAAAA);\n\t\tglPopMatrix();\n\t\tglEnable(GL_DEPTH_TEST);\n\t\tui.endCustomDraw(region);'),
                 inject_modloader_replace(recipes, "private:\n\tvoid buildRecipeIngredientsArray();", "public:\n\tvoid buildRecipeIngredientsArray();"),
                 inject_modloader(biome_decorator, '#include "stdafx.h"', '#include "..\\Minecraft.Client\\Windows64\\AxoWorldGen.h"'),
                 inject_modloader(biome_decorator, 'level->setInstaTick(false);', '\tAxoWorldGen_Decorate(level, random, biome, xo, zo);'),
@@ -429,15 +424,28 @@ def install_smartcmd_modloader():
                 inject_modloader(hell_flat, 'app.processSchematics(parent->getChunk(xt,zt));', '\tAxoWorldGen_Decorate(level, pprandom, level->getBiome(xo + 8, zo + 8), xo, zo);'),
                 inject_modloader_replace(survival_mode, 'if (changed && couldDestroy) \n\t{\n\t\tTile::tiles[t]->playerDestroy(minecraft->level, minecraft->player, x, y, z, data);\n\t}', 'if (changed && (couldDestroy || Tile::tiles[t]->isAxoCanBeBrokenByHand())) \n\t{\n\t\tTile::tiles[t]->playerDestroy(minecraft->level, minecraft->player, x, y, z, data);\n\t}'),
                 inject_modloader(tile_h, 'int getFaceFlags(LevelSource *level, int x, int y, int z);', '\tvirtual bool isAxoCanBeBrokenByHand() { return false; }'),
+                inject_modloader(biome_intit_layer, '#include "BiomeInitLayer.h"', '#include "..\\Minecraft.Client\\Windows64\\AxoWorldGen.h"'),
+                inject_modloader(biome_intit_layer, 'startBiomes[6] = Biome::jungle;\n\t}', '\tconst auto& customBiomes = AxoWorldGen_GetCustomBiomes();\n\tif (!customBiomes.empty()) {\n\t\tint newLen = startBiomes.length + (int)customBiomes.size();\n\t\tBiomeArray extended(newLen);\n\t\tfor (int i = 0; i < startBiomes.length; i++)\n\t\t\textended[i] = startBiomes[i];\n\t\tfor (int i = 0; i < (int)customBiomes.size(); i++)\n\t\t\textended[startBiomes.length + i] = Biome::biomes[customBiomes[i].biomeId];\n\t\tdelete[] startBiomes.data;\n\t\tstartBiomes = extended;\n\t}' ),
+                inject_modloader(tile_renderer, '\tcase Tile::SHAPE_HOPPER:\n\t\tretVal = tesselateHopperInWorld(tt, x, y, z);\n\t\tbreak;', '\tcase SHAPE_AXO_CUSTOM_MODEL:\n\t\tnoCulling = true;\n\t\tretVal = AxoModelLoader_Tessellate(this, tt, x, y, z);\n\t\tnoCulling = false;\n\t\tbreak;'),
+                inject_modloader_before(tile_renderer, 'if ( renderShape == SHAPE_CROSS_TEXTURE ) return true;', '\tif ( renderShape == SHAPE_AXO_CUSTOM_MODEL ) return true;'),
+                inject_modloader(tile_renderer, 't->setMipmapEnable( Tile::mipmapEnable[tile->id] );	// 4J added', '\n\tif (shape == SHAPE_AXO_CUSTOM_MODEL ||\n\t\t(shape == Tile::SHAPE_BLOCK && AxoModelLoader_HasModel(tile->id)) ||\n\t\tAxoModelLoader_HasModel(tile->id)) {\n\t\tglTranslatef(-0.5f, -0.5f, -0.5f);\n\t\tAxoModelLoader_TessellateForRenderTile(this, tile, brightness);\n\t\tt->setMipmapEnable(true);\n\t\treturn;\n\t}'),
+                inject_modloader(tile_renderer, '#include "stdafx.h"', '#include "Windows64/AxoModelLoader.h"'),
+                inject_modloader(tile_renderer, 'if ( renderShape == Tile::SHAPE_ANVIL) return true;', '\tif ( renderShape == SHAPE_AXO_CUSTOM_MODEL ) return true;'),
+                inject_modloader(dye_powder_item, '#include "Material.h"', '#include "CropTile.h"'),
+                inject_modloader(dye_powder_item,  'else if (tile == Tile::wheat_Id) \n\t{\n\t\tif (level->getData(x, y, z) == 7) return false;\n\t\tif(!bTestUseOnOnly)\n\t\t{\t\n\t\t\tif (!level->isClientSide) \n\t\t\t{\n\t\t\t\tstatic_cast<CropTile *>(Tile::tiles[tile])->growCrops(level, x, y, z);\n\t\t\t\titemInstance->count--;\n\t\t\t}\n\t\t}\n\t\treturn true;\n\t}', 'else if (tile == Tile::wheat_Id) \n\t{\n\t\tif (level->getData(x, y, z) == 7) return false;\n\t\tif(!bTestUseOnOnly)\n\t\t{\t\n\t\t\tif (!level->isClientSide) \n\t\t\t{\n\t\t\t\tstatic_cast<CropTile *>(Tile::tiles[tile])->growCrops(level, x, y, z);\n\t\t\t\titemInstance->count--;\n\t\t\t}\n\t\t}\n\t\treturn true;\n\t}\n\telse if (CropTile* crop = dynamic_cast<CropTile*>(Tile::tiles[tile]))\n\t{\n\t\tif (level->getData(x, y, z) == 7) return false;\n\t\tif (!bTestUseOnOnly)\n\t\t{\n\t\t\tif (!level->isClientSide)\n\t\t\t{\n\t\t\t\tcrop->growCrops(level, x, y, z);\n\t\t\t\titemInstance->count--;\n\t\t\t}\n\t\t}\n\t\treturn true;\n\t}'),
             ]),
-            (65, "Setting up dependencies...", lambda:[
-                inject_vsxproj(vcxproj,
-                    '<ClCompile Include="Windows64\\Windows64_Minecraft.cpp"',
-                    '    <ClCompile Include="Windows64\\AxoAPI.cpp" />\n    <ClCompile Include="Windows64\\AxoModLoader.cpp" />\n    <ClCompile Include="Windows64\\AxoItemImpl.cpp" />\n    <ClCompile Include="Windows64\\AxoBlockImpl.cpp" />\n    <ClCompile Include="Windows64\\AxoRecipeImpl.cpp" />\n    <ClCompile Include="Windows64\\AxoWorldGen.cpp" />'),
-                inject_vsxproj(vcxproj,
-                    '<ClInclude Include="Windows64\\KeyboardMouseInput.h"',
-                    '    <ClInclude Include="Windows64\\AxoAPI.h" />\n    <ClInclude Include="Windows64\\AxoModLoader.h" />\n    <ClInclude Include="Windows64\\AxoWorldGen.h" />'),
-            ]),
+            (65, "Setting up dependencies...", lambda: [
+        inject_cmakelists(
+            os.path.join(base, "Minecraft.Client", "cmake", "sources", "Windows.cmake"),
+            '  "${BASE_DIR}/Windows64_Minecraft.cpp"',
+            '  "${BASE_DIR}/AxoAPI.cpp"\n  "${BASE_DIR}/AxoModLoader.cpp"\n  "${BASE_DIR}/AxoItemImpl.cpp"\n  "${BASE_DIR}/AxoBlockImpl.cpp"\n  "${BASE_DIR}/AxoRecipeImpl.cpp"\n  "${BASE_DIR}/AxoWorldGen.cpp"\n  "${BASE_DIR}/AxoCropImpl.cpp"\n  "${BASE_DIR}/AxoModelLoader.cpp"\n  "${BASE_DIR}/AxoBiomeImpl.cpp"'
+        ),
+        inject_cmakelists(
+            os.path.join(base, "Minecraft.Client", "cmake", "sources", "Windows.cmake"),
+            '  "${BASE_DIR}/KeyboardMouseInput.h"',
+            '  "${BASE_DIR}/AxoAPI.h"\n  "${BASE_DIR}/AxoModLoader.h"\n  "${BASE_DIR}/AxoWorldGen.h"\n  "${BASE_DIR}/AxoModelLoader.h"\n  "${BASE_DIR}/AxoBlockImpl.h"'
+        ),
+        ]),
             (70, "Setting up project...", lambda: create_mods()),
             (80, "Compiling... (This may take a bit)",  lambda: compile_project()),
             (90, "Creating shortcut...", lambda: create_shortcut_file()),
