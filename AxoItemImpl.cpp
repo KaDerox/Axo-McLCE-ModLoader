@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <functional>
+#include <unordered_map>
 #include <cstdio>
 
 #include "..\..\Minecraft.World\net.minecraft.world.item.h"
@@ -21,10 +22,43 @@
 #include "..\..\Minecraft.World\FoodItem.h"
 #include "..\..\Minecraft.World\IconRegister.h"
 #include "..\..\Minecraft.World\Icon.h"
+#include "..\..\Minecraft.World\MobEffectInstance.h"
 
 #include "..\Common\UI\IUIScene_CreativeMenu.h"
 
 #include "AxoAPI.h"
+
+static int ResolveEffectName(const std::string& name) {
+    static const std::unordered_map<std::string, int> kMap = {
+        {"speed",           1},
+        {"slowness",        2},
+        {"haste",           3},
+        {"mining_fatigue",  4},
+        {"strength",        5},
+        {"instant_health",  6},
+        {"instant_damage",  7},
+        {"jump_boost",      8},
+        {"nausea",          9},
+        {"regeneration",   10},
+        {"resistance",     11},
+        {"fire_resistance",12},
+        {"water_breathing",13},
+        {"invisibility",   14},
+        {"blindness",      15},
+        {"night_vision",   16},
+        {"hunger",         17},
+        {"weakness",       18},
+        {"poison",         19},
+        {"wither",         20},
+        {"health_boost",   21},
+        {"absorption",     22},
+        {"saturation",     23},
+    };
+    auto it = kMap.find(name);
+    if (it != kMap.end()) return it->second;
+    printf("[AxoLoader] ResolveEffectName: unknown effect \"%s\"\n", name.c_str());
+    return -1;
+}
 
 class AxoItem : public Item {
 public:
@@ -115,6 +149,9 @@ public:
     bool                   mIsPickaxe;
     bool                   mIsAxe;
     bool                   mIsShovel;
+    std::string            mEffectName;
+    int                    mEffectDuration;
+    int                    mEffectAmplifier;
 
     explicit AxoFoodItem(const AxoItemDef& def)
         : FoodItem(def.id - 256, def.food.nutrition, def.food.saturation, def.food.isMeat)
@@ -127,6 +164,9 @@ public:
         , mIsPickaxe(def.isPickaxe)
         , mIsAxe(def.isAxe)
         , mIsShovel(def.isShovel)
+        , mEffectName(def.food.effect.effectName)
+        , mEffectDuration(def.food.effect.duration)
+        , mEffectAmplifier(def.food.effect.amplifier)
     {
         maxStackSize = def.maxStackSize;
         setIconName(mIconName);
@@ -144,6 +184,16 @@ public:
 
     std::wstring getHoverName(shared_ptr<ItemInstance>) override {
         return std::wstring(mDisplayName.begin(), mDisplayName.end());
+    }
+
+    shared_ptr<ItemInstance> useTimeDepleted(shared_ptr<ItemInstance> instance, Level* level, shared_ptr<Player> player) override {
+        shared_ptr<ItemInstance> result = FoodItem::useTimeDepleted(instance, level, player);
+        if (!mEffectName.empty() && mEffectDuration > 0 && !level->isClientSide) {
+            int effectId = ResolveEffectName(mEffectName);
+            if (effectId >= 0)
+                player->addEffect(new MobEffectInstance(effectId, mEffectDuration, mEffectAmplifier));
+        }
+        return result;
     }
 
     attrAttrModMap* getDefaultAttributeModifiers() override {
@@ -185,14 +235,22 @@ public:
 };
 
 bool AxoItem_CreateFromDef(const AxoItemDef& def) {
+    printf("[AxoLoader] CreateFromDef id=%d edible=%d nutrition=%d sat=%.2f isMeat=%d\n",
+        def.id, (int)def.isEdible, def.food.nutrition, def.food.saturation, (int)def.food.isMeat);
+    fflush(stdout);
     if (Item::items[def.id] != NULL) {
         printf("[AxoLoader] id %d already taken, skipping \"%s\".\n", def.id, def.name.c_str());
         return false;
     }
-    if (def.isEdible)
+    if (def.isEdible) {
+        printf("[AxoLoader] Creating FoodItem...\n"); fflush(stdout);
         new AxoFoodItem(def);
-    else
+        printf("[AxoLoader] FoodItem created OK\n"); fflush(stdout);
+    } else {
+        printf("[AxoLoader] Creating Item...\n"); fflush(stdout);
         new AxoItem(def);
+        printf("[AxoLoader] Item created OK\n"); fflush(stdout);
+    }
     printf("[AxoLoader] Created AxoItem id=%d \"%s\"%s\n",
            def.id, def.name.c_str(), def.isEdible ? " (edible)" : "");
     return true;
