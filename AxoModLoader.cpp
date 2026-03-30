@@ -2,6 +2,7 @@
 
 #include "AxoModLoader.h"
 #include "AxoAPI.h"
+#include "AxoModelLoader.h"
 #include "..\..\Minecraft.World\Recipes.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -18,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <unordered_map>
 #include <cstdio>
 
 struct LoadedMod {
@@ -37,6 +39,7 @@ struct LoadedMod {
 
 static std::vector<LoadedMod>    sLoadedMods;
 static std::vector<std::wstring> sQueuedTerrainIcons;
+static std::unordered_map<std::wstring, Icon*> sTerrainIconCache;
 
 static std::string PathJoin(const std::string& a, const std::string& b) {
     if (a.empty()) return b;
@@ -229,6 +232,8 @@ static void AxoLoader_CreateConsole() {
 void AxoModLoader_MidInit() {
     printf("[AxoLoader] MidInit...\n");
     AxoAPI_FlushBlockRegistrations();
+    AxoAPI_FlushBiomeRegistrations();
+    AxoAPI_FlushCropRegistrations();
     printf("[AxoLoader] MidInit done.\n");
 }
 
@@ -244,11 +249,22 @@ void AxoModLoader_Init(const char*) {
 #pragma comment(lib, "gdiplus.lib")
 
 #include "..\PreStitchedTextureMap.h"
+#include "..\Minecraft.World\Icon.h"
 
 bool AxoModLoader_IsTerrainIconQueued(const std::wstring& name) {
     for (size_t i = 0; i < sQueuedTerrainIcons.size(); ++i)
         if (sQueuedTerrainIcons[i] == name) return true;
     return false;
+}
+
+void AxoModLoader_CacheTerrainIcon(const std::wstring& name, Icon* icon) {
+    sTerrainIconCache[name] = icon;
+}
+
+Icon* AxoModLoader_GetTerrainIcon(const std::wstring& name) {
+    auto it = sTerrainIconCache.find(name);
+    if (it != sTerrainIconCache.end()) return it->second;
+    return nullptr;
 }
 
 struct AtlasSlot { int row, col; };
@@ -459,6 +475,26 @@ done:
 
 done_terrain:
     GdiplusStop();
+
+    for (size_t i = 0; i < zips.size(); ++i) {
+        std::string stem      = GetStem(GetFilename(zips[i]));
+        std::string tmpDir    = PathJoin(PathJoin(modsDir, "_tmp"), stem);
+        std::string mdlDir    = PathJoin(PathJoin(tmpDir, "models"), "blocks");
+        if (!PathExists(mdlDir)) continue;
+        WIN32_FIND_DATAA fdm;
+        HANDLE hFindM = FindFirstFileA(PathJoin(mdlDir, "*.json").c_str(), &fdm);
+        if (hFindM == INVALID_HANDLE_VALUE) continue;
+        do {
+            std::string modelName = GetStem(fdm.cFileName);
+            std::string jsonPath  = PathJoin(mdlDir, fdm.cFileName);
+            std::ifstream f(jsonPath.c_str());
+            if (!f) continue;
+            std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+            AxoModelLoader_StoreJSON(modelName, content);
+            printf("[AxoLoader] Stored model JSON: %s\n", modelName.c_str());
+        } while (FindNextFileA(hFindM, &fdm));
+        FindClose(hFindM);
+    }
 
     AxoAPITable* apiTable = AxoAPI_GetTable();
 
