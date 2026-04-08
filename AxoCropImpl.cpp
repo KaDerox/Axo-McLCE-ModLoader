@@ -129,7 +129,7 @@ public:
 
 static int sNextCropSeedItemId = 422;
 
-bool AxoCrop_CreateFromDef(const AxoCropDef& def) {
+bool AxoCrop_CreateFromDef(const AxoCropDefI& def) {
     if (Tile::tiles[def.id] != nullptr) {
         printf("[AxoLoader] AxoCrop: tile id %d already taken, skipping \"%s\".\n", def.id, def.name.c_str());
         return false;

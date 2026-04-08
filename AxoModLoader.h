@@ -16,12 +16,13 @@ Icon* AxoModLoader_GetTerrainIcon(const std::wstring& name);
 
 struct AxoAPITable;
 AxoAPITable* AxoAPI_GetTable();
+AxoAPITable* AxoAPI_GetTableV1();
 void         AxoAPI_FlushRegistrations();
 void         AxoAPI_FlushBlockRegistrations();
 void         AxoAPI_FlushCreativeMenu();
 
-struct AxoRecipeDef;
-bool AxoRecipe_CreateFromDef(const AxoRecipeDef& def);
+struct AxoRecipeDefI;
+bool AxoRecipe_CreateFromDef(const AxoRecipeDefI& def);
 void AxoAPI_FlushRecipeRegistrations();
 void AxoAPI_FlushBiomeRegistrations();
 void AxoAPI_FlushCropRegistrations();

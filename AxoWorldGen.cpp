@@ -16,8 +16,8 @@
 #include "AxoWorldGen.h"
 
 struct AxoSpawnEntry {
-    int              blockId;
-    AxoBlockSpawnDef spawn;
+    int               blockId;
+    AxoBlockSpawnDefI spawn;
 };
 
 static std::vector<AxoSpawnEntry> sSpawnEntries;
@@ -32,7 +32,7 @@ const std::vector<AxoBiomeSpawnEntry>& AxoWorldGen_GetCustomBiomes() {
     return sBiomeSpawnEntries;
 }
 
-void AxoWorldGen_RegisterSpawn(int blockId, const AxoBlockSpawnDef& spawn) {
+void AxoWorldGen_RegisterSpawn(int blockId, const AxoBlockSpawnDefI& spawn) {
     if (!spawn.enabled) return;
     sSpawnEntries.push_back({blockId, spawn});
     printf("[AxoLoader] Registered spawn for block id=%d freq=%d vein=%d y=%d-%d\n",
@@ -54,7 +54,7 @@ void AxoWorldGen_Decorate(Level* level, Random* random, Biome* biome, int xo, in
 
     level->setInstaTick(true);
     for (const auto& entry : sSpawnEntries) {
-        const AxoBlockSpawnDef& s = entry.spawn;
+        const AxoBlockSpawnDefI& s = entry.spawn;
 
         if (isNether  && !s.inNether)    continue;
         if (!isNether && !s.inOverworld) continue;

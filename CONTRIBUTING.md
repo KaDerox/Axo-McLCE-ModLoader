@@ -13,14 +13,20 @@ As the project is written in C++, any help with improving the code quality, perf
 3. Submit a pull request with a clear description of what you changed and why.
 
 ## Additional Technical Info
-1. Loader currently uses 6 custom files:
-    - AxoAPI.h
-    - AxoAPI.cpp
-    - AxoModLoader.h
-    - AxoModLoader.cpp
-    - AxoItemImpl.cpp
-    - AxoBlockImpl.cpp
-2. You can get those files from decompiled game files or using our API!
+1. Loader uses the following source files:
+    - **AxoAPI.h** — C-stable ABI public structs + game-internal I-suffixed types
+    - **AxoAPI.cpp** — API tables (V1 + V2), registration pipeline, entity spawn functions, vanilla item/block maps
+    - **AxoModLoader.h** — Loader function declarations
+    - **AxoModLoader.cpp** — Mod loading lifecycle, native ZIP extraction, GDI+ atlas patching, SEH crash wrappers, V1/V2 detection
+    - **AxoItemImpl.cpp** — Custom item / food item classes
+    - **AxoBlockImpl.cpp / .h** — Custom block class with model, collision, multi-face support
+    - **AxoRecipeImpl.cpp** — Crafting and furnace recipe registration
+    - **AxoBiomeImpl.cpp** — Custom biome class
+    - **AxoCropImpl.cpp** — Custom crop and seed item classes
+    - **AxoWorldGen.cpp / .h** — Ore and grass-like world generation
+    - **AxoModelLoader.cpp / .h** — Custom JSON block model parser and tessellator
+    - **AxoSDK/** — Public SDK for mod developers (header, CMake template, examples)
+2. You can get those files from decompiled game files or from this repository!
     
 ## Reporting Issues
 
