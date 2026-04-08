@@ -4,6 +4,8 @@
 
 Axo Minecraft Legacy Console Edition ModLoader is a ModLoader for the McLCE that adds mod compatibility!
 
+> [!IMPORTANT]
+> AxoAPI V2 and project structure update is coming soon.
 
 ![Logo](http://axoloader.eu/api/assets/Logo_Baner.png) 
 
