@@ -11,7 +11,7 @@
 
 class AxoBiomeDecorator : public BiomeDecorator {
 public:
-    explicit AxoBiomeDecorator(Biome* biome, const AxoBiomeDef& def)
+    explicit AxoBiomeDecorator(Biome* biome, const AxoBiomeDefI& def)
         : BiomeDecorator(biome)
     {
         treeCount   = def.treeCount;
@@ -28,7 +28,7 @@ class AxoBiome : public Biome {
     bool mHasSnow;
     bool mHasRain;
 public:
-    explicit AxoBiome(const AxoBiomeDef& def) : Biome(def.id) {
+    explicit AxoBiome(const AxoBiomeDefI& def) : Biome(def.id) {
         m_name      = std::wstring(def.name.begin(), def.name.end());
         temperature = def.temperature;
         downfall    = def.downfall;
@@ -62,7 +62,7 @@ protected:
     BiomeDecorator* createDecorator() { return nullptr; }
 };
 
-bool AxoBiome_CreateFromDef(const AxoBiomeDef& def) {
+bool AxoBiome_CreateFromDef(const AxoBiomeDefI& def) {
     printf("[AxoLoader] AxoBiome_CreateFromDef start id=%d \"%s\"\n", def.id, def.name.c_str());
     printf("[AxoLoader]   topMaterial=\"%s\" material=\"%s\"\n", def.topMaterial.c_str(), def.material.c_str());
     AxoBiome* biome = new AxoBiome(def);

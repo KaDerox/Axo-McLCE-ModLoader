@@ -72,7 +72,7 @@ public:
     bool                   mIsAxe;
     bool                   mIsShovel;
 
-    explicit AxoItem(const AxoItemDef& def)
+    explicit AxoItem(const AxoItemDefI& def)
         : Item(def.id - 256)
         , mIconName(def.iconName)
         , mDisplayName(def.name)
@@ -153,7 +153,7 @@ public:
     int                    mEffectDuration;
     int                    mEffectAmplifier;
 
-    explicit AxoFoodItem(const AxoItemDef& def)
+    explicit AxoFoodItem(const AxoItemDefI& def)
         : FoodItem(def.id - 256, def.food.nutrition, def.food.saturation, def.food.isMeat)
         , mIconName(def.iconName)
         , mDisplayName(def.name)
@@ -234,7 +234,7 @@ public:
     }
 };
 
-bool AxoItem_CreateFromDef(const AxoItemDef& def) {
+bool AxoItem_CreateFromDef(const AxoItemDefI& def) {
     printf("[AxoLoader] CreateFromDef id=%d edible=%d nutrition=%d sat=%.2f isMeat=%d\n",
         def.id, (int)def.isEdible, def.food.nutrition, def.food.saturation, (int)def.food.isMeat);
     fflush(stdout);
@@ -258,7 +258,7 @@ bool AxoItem_CreateFromDef(const AxoItemDef& def) {
 
 void AxoItem_AddToCreativeMenu(int itemId, int creativeTab) {
     IUIScene_CreativeMenu::ECreative_Inventory_Groups group = IUIScene_CreativeMenu::eCreativeInventory_Misc;
-    if (creativeTab >= 0 && creativeTab < IUIScene_CreativeMenu::eCreativeInventoryGroupsCount)
+    if (creativeTab >= 0 && creativeTab < IUIScene_CreativeMenu::totalGroupCount())
         group = (IUIScene_CreativeMenu::ECreative_Inventory_Groups)creativeTab;
     IUIScene_CreativeMenu::AxoAddToGroup(group, shared_ptr<ItemInstance>(new ItemInstance(itemId, 1, 0)));
     printf("[AxoLoader] Added item id=%d to creative group %d\n", itemId, (int)group);

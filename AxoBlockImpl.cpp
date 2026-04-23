@@ -65,6 +65,9 @@ public:
         , mHasDifferentSides(def.hasDifferentSides)
         , mOnDestroyed(def.onDestroyed)
     {
+        printf("[AxoBlock] CTOR id=%d name=%s def.onDestroyed=%d mOnDestroyed=%d\n",
+               def.id, def.name.c_str(), (bool)def.onDestroyed, (bool)mOnDestroyed);
+        fflush(stdout);
         mFaceIcons[0] = nullptr; mFaceIcons[1] = nullptr;
         mFaceIcons[2] = nullptr; mFaceIcons[3] = nullptr;
         mFaceIcons[4] = nullptr; mFaceIcons[5] = nullptr;
@@ -250,17 +253,30 @@ public:
     }
 
     void playerDestroy(Level* level, shared_ptr<Player> player, int x, int y, int z, int data) override {
+        printf("[AxoBlock] playerDestroy id=%d at %d,%d,%d mOnDestroyed=%d\n", id, x, y, z, (bool)mOnDestroyed);
+        fflush(stdout);
         sLastPlayer = player.get();
         sLastItem   = player ? player->inventory->getSelected() : nullptr;
         Tile::playerDestroy(level, player, x, y, z, data);
-        if (mOnDestroyed)
+        if (mOnDestroyed) {
+            printf("[AxoBlock] CALLING mOnDestroyed...\n"); fflush(stdout);
             mOnDestroyed(x, y, z, level, sLastPlayer, sLastItem.get());
+            printf("[AxoBlock] mOnDestroyed RETURNED\n"); fflush(stdout);
+        } else {
+            printf("[AxoBlock] mOnDestroyed is EMPTY, skipping\n"); fflush(stdout);
+        }
     }
 
     void destroy(Level* level, int x, int y, int z, int data) override {
+        printf("[AxoBlock] destroy id=%d at %d,%d,%d mOnDestroyed=%d\n", id, x, y, z, (bool)mOnDestroyed); fflush(stdout);
         Tile::destroy(level, x, y, z, data);
         if (mCanBeBrokenByHand) {
             Tile::spawnResources(level, x, y, z, data, 1.0f, 0);
+        }
+        if (mOnDestroyed) {
+            printf("[AxoBlock] destroy: CALLING mOnDestroyed...\n"); fflush(stdout);
+            mOnDestroyed(x, y, z, level, sLastPlayer, sLastItem.get());
+            printf("[AxoBlock] destroy: mOnDestroyed RETURNED\n"); fflush(stdout);
         }
     }
 };
@@ -305,7 +321,7 @@ bool AxoBlock_CreateFromDef(const AxoBlockDefInternal& def) {
 
 void AxoBlock_AddToCreativeMenu(int blockId, int creativeTab) {
     IUIScene_CreativeMenu::ECreative_Inventory_Groups group = IUIScene_CreativeMenu::eCreativeInventory_BuildingBlocks;
-    if (creativeTab >= 0 && creativeTab < IUIScene_CreativeMenu::eCreativeInventoryGroupsCount)
+    if (creativeTab >= 0 && creativeTab < IUIScene_CreativeMenu::totalGroupCount())
         group = (IUIScene_CreativeMenu::ECreative_Inventory_Groups)creativeTab;
     IUIScene_CreativeMenu::AxoAddToGroup(group, shared_ptr<ItemInstance>(new ItemInstance(blockId, 1, 0)));
     printf("[AxoLoader] Added block id=%d to creative group %d\n", blockId, (int)group);

@@ -45,9 +45,14 @@ If you want to create mods for AxoLoader you can read under this section about m
 - [x] Multi sided texture for blocks
 - [x] Custom plants with seeds
 - [x] Food effects
+- [x] C-stable ABI (mods work with any CRT / compiler config)
+- [x] V1 / V2 API versioning (old mods still load)
+- [x] Entity spawning (SpawnEntity, DropItem, StrikeLightning, SpawnTnt, SpawnFallingBlock)
+- [x] SEH crash protection (bad mods are disabled instead of crashing the game)
+- [x] Native ZIP extraction (works on Wine / Linux)
+- [x] Public AxoSDK for mod developers
 
 **WIP AxoAPI features:**
-- [ ] Custom entities
 - [ ] Custom item models
 - [ ] Custom armor
 
@@ -68,9 +73,18 @@ Every Axo mod needs 3 files:
 - models:
   - blocks (only if you add 3D blocks)
 
-### Creating mod.dll
-1. Create blank c++ project in VS 2022. Configure the project for the dll export. Download AxoAPI.h from **[here](https://github.com/KaDerox/Axo-McLCE-ModLoader/releases)** and place it in the source files
-2. Create YourModName.cpp in the source files. This is the main code for your mod:
+### Creating mod.dll (Recommended — using AxoSDK)
+1. Copy the `AxoSDK/` folder from this repository.
+2. Create a new folder for your mod, copy `AxoSDK/CMakeLists.txt` as a template, and create your `.cpp` file.
+3. Build with CMake: `cmake -B build -DAXO_SDK_DIR=path/to/AxoSDK` then `cmake --build build --config Release`.
+4. **CRITICAL**: Your mod MUST be built with `/MT` (static Release CRT) and C++17. The AxoSDK CMakeLists template handles this for you.
+
+See `AxoSDK/examples/HelloMod/` for a complete working example.
+
+### Creating mod.dll (Manual setup)
+1. Create blank C++ DLL project in VS 2022. Set Runtime Library to `/MT` (static Release CRT, not `/MD`).
+2. Download `AxoSDK/include/AxoAPI.h` and place it in your source files.
+3. Create YourModName.cpp in the source files. This is the main code for your mod:
    ```
     #define AXO_MOD 
     #define MOD_ID "your_mod"
@@ -98,12 +112,14 @@ Here is an example of how manifest should look like.
 ```
 {
     "mod_id": "example_mod",
+    "api_version": 2,
     "name": "Example Mod",
     "version": "1.0.0",
     "author": "you",
     "description": "Simple example mod for AxoLoader"
 }
 ```
+**Important:** `api_version` should be set to `2` for new mods using the current C-stable ABI. If omitted, the loader assumes V1 (legacy std::string ABI) for backward compatibility.
 ### Adding new blocks
 Registering new blocks in Axo is simple! All registrations go in the ```void ModEntry``` function.
 Here is an example of adding a block:
@@ -433,6 +449,47 @@ crystalForest.topMaterial  = "grass";
 crystalForest.material     = "dirt";
 crystalForest.hilliness = 1.0f;
 AxoAPI_RegisterBiome(&crystalForest);
+```
+
+### Entity / World Interaction (V2 API)
+These functions are available in API v2 and can be used inside `onDestroyed` callbacks or anywhere you have a `Level*` pointer.
+
+**Spawn a mob:**
+```
+AxoAPI_SpawnEntity(level, 50, x, y, z); // 50 = Creeper entity ID
+```
+
+**Drop an item:**
+```
+AxoAPI_DropItem(level, 264, 3, 0, x, y, z); // Drop 3 diamonds
+```
+
+**Strike lightning:**
+```
+AxoAPI_StrikeLightning(level, x, y, z);
+```
+
+**Spawn TNT:**
+```
+AxoAPI_SpawnTnt(level, x, y, z, 80); // 80 tick fuse
+```
+
+**Spawn falling block:**
+```
+AxoAPI_SpawnFallingBlock(level, x, y, z, 12, 0); // Sand block (id 12)
+```
+
+### Block onDestroyed callback
+You can run code when a block is broken:
+```
+AxoBlockDef myBlock;
+myBlock.name = "Explosive Ore";
+myBlock.iconName = L"explosive_ore";
+myBlock.onDestroyed = [](int x, int y, int z, Level* level, Player* player, ItemInstance* item) {
+    AxoAPI_SpawnTnt(level, x + 0.5, y + 1.0, z + 0.5, 40);
+    AxoAPI_StrikeLightning(level, x, y + 5, z);
+};
+AxoAPI_RegisterBlock(&myBlock);
 ```
 
 ### Adding textures

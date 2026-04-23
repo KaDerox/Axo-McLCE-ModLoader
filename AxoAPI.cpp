@@ -5,27 +5,36 @@
 #include "AxoWorldGen.h"
 #include "AxoModelLoader.h"
 
+#include "EntityIO.h"
+#include "ItemEntity.h"
+#include "ItemInstance.h"
+#include "LightningBolt.h"
+#include "PrimedTnt.h"
+#include "FallingTile.h"
+#include "Mob.h"
+#include "Level.h"
+
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <cstdio>
 
-extern bool AxoItem_CreateFromDef(const AxoItemDef& def);
+extern bool AxoItem_CreateFromDef(const AxoItemDefI& def);
 extern void AxoItem_AddToCreativeMenu(int itemId, int creativeTab);
 extern bool AxoBlock_CreateFromDef(const AxoBlockDefInternal& def);
 extern void AxoBlock_AddToCreativeMenu(int blockId, int creativeTab);
-extern bool AxoRecipe_CreateFromDef(const AxoRecipeDef& def);
-extern bool AxoBiome_CreateFromDef(const AxoBiomeDef& def);
-extern bool AxoCrop_CreateFromDef(const AxoCropDef& def);
+extern bool AxoRecipe_CreateFromDef(const AxoRecipeDefI& def);
+extern bool AxoBiome_CreateFromDef(const AxoBiomeDefI& def);
+extern bool AxoCrop_CreateFromDef(const AxoCropDefI& def);
 
-static std::vector<AxoBiomeDef> sPendingBiomes;
-static std::vector<AxoCropDef>  sPendingCrops;
+static std::vector<AxoBiomeDefI> sPendingBiomes;
+static std::vector<AxoCropDefI>  sPendingCrops;
 
 AxoAPITable* gAxoAPI = nullptr;
 
-static std::vector<AxoItemDef>   sPendingItems;
-static std::vector<AxoBlockDef>  sPendingBlocks;
-static std::vector<AxoRecipeDef> sPendingRecipes;
+static std::vector<AxoItemDefI>   sPendingItems;
+static std::vector<AxoBlockDefI>  sPendingBlocks;
+static std::vector<AxoRecipeDefI> sPendingRecipes;
 
 static int sNextItemId  = 422;
 static int sNextBlockId = 174;
@@ -182,7 +191,7 @@ static void Impl_Log(const char* modId, const char* msg) {
 
 static bool Impl_RegisterItem(const AxoItemDef* def) {
     if (!def) return false;
-    AxoItemDef resolved = *def;
+    AxoItemDefI resolved = ToInternal(*def);
     if (resolved.id == AXO_ID_AUTO) {
         if (sNextItemId > 31999) {
             printf("[AxoLoader] RegisterItem: no free item IDs left.\n");
@@ -200,7 +209,7 @@ static bool Impl_RegisterItem(const AxoItemDef* def) {
 
 static bool Impl_RegisterBlock(const AxoBlockDef* def) {
     if (!def) return false;
-    AxoBlockDef resolved = *def;
+    AxoBlockDefI resolved = ToInternal(*def);
     if (resolved.id == AXO_ID_AUTO) {
         if (sNextBlockId > 255) {
             printf("[AxoLoader] RegisterBlock: no free block IDs left.\n");
@@ -219,9 +228,9 @@ static bool Impl_RegisterBlock(const AxoBlockDef* def) {
 
 static bool Impl_RegisterRecipe(const AxoRecipeDef* def) {
     if (!def) return false;
-    sPendingRecipes.push_back(*def);
+    sPendingRecipes.push_back(ToInternal(*def));
     printf("[AxoLoader] Queued recipe -> \"%s\" (x%d)\n",
-           def->resultItemName.c_str(), def->resultCount);
+           sPendingRecipes.back().resultItemName.c_str(), def->resultCount);
     return true;
 }
 
@@ -229,7 +238,7 @@ static int sNextBiomeId = 23;
 
 static bool Impl_RegisterBiome(const AxoBiomeDef* def) {
     if (!def) return false;
-    AxoBiomeDef resolved = *def;
+    AxoBiomeDefI resolved = ToInternal(*def);
     if (resolved.id == AXO_ID_AUTO) {
         if (sNextBiomeId > 255) {
             printf("[AxoLoader] RegisterBiome: no free biome IDs left.\n");
@@ -248,7 +257,7 @@ static bool Impl_RegisterBiome(const AxoBiomeDef* def) {
 
 static bool Impl_RegisterCrop(const AxoCropDef* def) {
     if (!def) return false;
-    AxoCropDef resolved = *def;
+    AxoCropDefI resolved = ToInternal(*def);
     if (resolved.id == AXO_ID_AUTO) {
         if (sNextBlockId > 255) {
             printf("[AxoLoader] RegisterCrop: no free block IDs left.\n");
@@ -261,17 +270,178 @@ static bool Impl_RegisterCrop(const AxoCropDef* def) {
     return true;
 }
 
+static bool Impl_SpawnEntity(Level* level, int entityId, double x, double y, double z) {
+    if (!level) return false;
+    auto entity = EntityIO::newById(entityId, level);
+    if (!entity) {
+        printf("[AxoLoader] SpawnEntity: unknown entity id %d\n", entityId);
+        return false;
+    }
+    entity->moveTo(x, y, z, ((float)rand() / (float)RAND_MAX) * 360.0f, 0.0f);
+    auto mob = dynamic_pointer_cast<Mob>(entity);
+    if (mob) mob->finalizeMobSpawn(nullptr);
+    return level->addEntity(entity);
+}
+
+static bool Impl_DropItem(Level* level, int itemId, int count, int auxData, double x, double y, double z) {
+    if (!level || count <= 0) {
+        printf("[AxoLoader] DropItem: SKIP level=%p count=%d\n", level, count);
+        return false;
+    }
+    auto item = make_shared<ItemInstance>(itemId, count, auxData);
+    if (!item || !item->getItem()) {
+        printf("[AxoLoader] DropItem: INVALID item id=%d (getItem=%p)\n", itemId, item ? item->getItem() : nullptr);
+        return false;
+    }
+    auto ent = make_shared<ItemEntity>(level, x, y, z, item);
+    ent->throwTime = 10;
+    printf("[AxoLoader] DropItem: id=%d count=%d aux=%d pos=(%.1f,%.1f,%.1f) entId=%d\n",
+           itemId, count, auxData, x, y, z, ent->entityId);
+    bool ok = level->addEntity(ent);
+    printf("[AxoLoader] DropItem: addEntity returned %s\n", ok ? "TRUE" : "FALSE");
+    return ok;
+}
+
+static bool Impl_StrikeLightning(Level* level, double x, double y, double z) {
+    if (!level) return false;
+    auto bolt = make_shared<LightningBolt>(level, x, y, z);
+    return level->addGlobalEntity(bolt);
+}
+
+static bool Impl_SpawnTnt(Level* level, double x, double y, double z, int fuse) {
+    if (!level) return false;
+    auto tnt = make_shared<PrimedTnt>(level, x, y, z, nullptr);
+    tnt->life = fuse;
+    return level->addEntity(tnt);
+}
+
+static bool Impl_SpawnFallingBlock(Level* level, double x, double y, double z, int tileId, int data) {
+    if (!level) return false;
+    auto fb = make_shared<FallingTile>(level, x, y, z, tileId, data);
+    return level->addEntity(fb);
+}
+
 static AxoAPITable sAPITable = {
     Impl_Log,
     Impl_RegisterItem,
     Impl_RegisterBlock,
     Impl_RegisterRecipe,
     Impl_RegisterBiome,
-    Impl_RegisterCrop
+    Impl_RegisterCrop,
+    Impl_SpawnEntity,
+    Impl_DropItem,
+    Impl_StrikeLightning,
+    Impl_SpawnTnt,
+    Impl_SpawnFallingBlock
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  V1 backward compatibility — old mods compiled against the original
+//  Axo_McLCE_ModLoader AxoAPI.h (std::string-based structs, 6 pointers).
+//
+//  MSVC 2015+ uses the same binary layout for std::string / std::wstring /
+//  std::function in both Debug and Release builds.  Only the CRT heap differs.
+//  Our V1 shims receive pointers to old-layout structs (which are
+//  layout-identical to our AxoItemDefI / AxoBlockDefI / etc.), copy the data
+//  into game-owned storage, and feed them into the normal registration pipeline.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+static bool V1_RegisterItem(const AxoItemDefI* def) {
+    if (!def) return false;
+    AxoItemDefI resolved = *def;
+    if (resolved.id == AXO_ID_AUTO) {
+        if (sNextItemId > 31999) {
+            printf("[AxoLoader/V1] RegisterItem: no free item IDs left.\n");
+            return false;
+        }
+        resolved.id = sNextItemId++;
+    } else if (resolved.id < 422 || resolved.id > 31999) {
+        printf("[AxoLoader/V1] RegisterItem: id %d out of range.\n", resolved.id);
+        return false;
+    }
+    sPendingItems.push_back(resolved);
+    printf("[AxoLoader/V1] Queued item id=%d \"%s\"\n", resolved.id, resolved.name.c_str());
+    return true;
+}
+
+static bool V1_RegisterBlock(const AxoBlockDefI* def) {
+    if (!def) return false;
+    AxoBlockDefI resolved = *def;
+    if (resolved.id == AXO_ID_AUTO) {
+        if (sNextBlockId > 255) {
+            printf("[AxoLoader/V1] RegisterBlock: no free block IDs left.\n");
+            return false;
+        }
+        resolved.id = sNextBlockId++;
+    } else if (resolved.id < 174 || resolved.id > 255) {
+        printf("[AxoLoader/V1] RegisterBlock: id %d out of range.\n", resolved.id);
+        return false;
+    }
+    sPendingBlocks.push_back(resolved);
+    printf("[AxoLoader/V1] Queued block id=%d \"%s\"\n", resolved.id, resolved.name.c_str());
+    return true;
+}
+
+static bool V1_RegisterRecipe(const AxoRecipeDefI* def) {
+    if (!def) return false;
+    sPendingRecipes.push_back(*def);
+    printf("[AxoLoader/V1] Queued recipe -> \"%s\"\n", def->resultItemName.c_str());
+    return true;
+}
+
+static bool V1_RegisterBiome(const AxoBiomeDefI* def) {
+    if (!def) return false;
+    AxoBiomeDefI resolved = *def;
+    if (resolved.id == AXO_ID_AUTO) {
+        if (sNextBiomeId > 255) {
+            printf("[AxoLoader/V1] RegisterBiome: no free biome IDs left.\n");
+            return false;
+        }
+        resolved.id = sNextBiomeId++;
+    }
+    if (resolved.id < 23 || resolved.id > 255) {
+        printf("[AxoLoader/V1] RegisterBiome: id %d out of range.\n", resolved.id);
+        return false;
+    }
+    sPendingBiomes.push_back(resolved);
+    printf("[AxoLoader/V1] Queued biome id=%d \"%s\"\n", resolved.id, resolved.name.c_str());
+    return true;
+}
+
+static bool V1_RegisterCrop(const AxoCropDefI* def) {
+    if (!def) return false;
+    AxoCropDefI resolved = *def;
+    if (resolved.id == AXO_ID_AUTO) {
+        if (sNextBlockId > 255) {
+            printf("[AxoLoader/V1] RegisterCrop: no free block IDs left.\n");
+            return false;
+        }
+        resolved.id = sNextBlockId++;
+    }
+    sPendingCrops.push_back(resolved);
+    printf("[AxoLoader/V1] Queued crop id=%d \"%s\"\n", resolved.id, resolved.name.c_str());
+    return true;
+}
+
+// V1 API table — 6 function pointers matching the original AxoAPITable layout.
+// Old mods read only the first 6 slots.  We pad with nullptr for the v2 slots
+// so the table is safely castable to AxoAPITable*.
+static AxoAPITable sV1APITable = {
+    Impl_Log,                                                           // Log is unchanged
+    (decltype(AxoAPITable::RegisterItem))   V1_RegisterItem,
+    (decltype(AxoAPITable::RegisterBlock))  V1_RegisterBlock,
+    (decltype(AxoAPITable::RegisterRecipe)) V1_RegisterRecipe,
+    (decltype(AxoAPITable::RegisterBiome))  V1_RegisterBiome,
+    (decltype(AxoAPITable::RegisterCrop))   V1_RegisterCrop,
+    nullptr, nullptr, nullptr, nullptr, nullptr                         // v2 slots
 };
 
 AxoAPITable* AxoAPI_GetTable() {
     return &sAPITable;
+}
+
+AxoAPITable* AxoAPI_GetTableV1() {
+    return &sV1APITable;
 }
 
 void AxoAPI_FlushRegistrations() {

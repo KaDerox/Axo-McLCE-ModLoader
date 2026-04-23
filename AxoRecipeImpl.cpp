@@ -23,7 +23,7 @@ static wchar_t GroupFromTab(int group) {
     }
 }
 
-bool AxoRecipe_CreateFromDef(const AxoRecipeDef& def) {
+bool AxoRecipe_CreateFromDef(const AxoRecipeDefI& def) {
 
     if (def.isFurnace) {
         int inputId  = ResolveItemName(def.furnaceInputName);
